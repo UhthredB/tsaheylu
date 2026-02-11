@@ -1,5 +1,6 @@
 import { config } from '../config.js';
 import { logSecurityEvent } from '../security/audit-log.js';
+import { detectChallenge, solveChallenge, submitChallengeSolution } from '../security/challenge-handler.js';
 import type {
     MoltbookPost, MoltbookComment, MoltbookAgent,
     MoltbookSearchResult, MoltbookDMCheck, MoltbookConversation,
@@ -63,10 +64,22 @@ export class MoltbookClient {
 
         if (!res.ok) {
             const text = await res.text();
+            // Check if error response contains a challenge
+            try {
+                const errorData = JSON.parse(text);
+                await this.handlePossibleChallenge(errorData);
+            } catch { /* not JSON or no challenge */ }
             throw new Error(`Moltbook API error ${res.status}: ${text.slice(0, 500)}`);
         }
 
-        return res.json() as Promise<T>;
+        const data = await res.json() as T;
+
+        // Check successful responses for embedded challenges
+        if (data && typeof data === 'object') {
+            await this.handlePossibleChallenge(data as Record<string, unknown>);
+        }
+
+        return data;
     }
 
     // ─── Posts ───
@@ -307,6 +320,35 @@ export class MoltbookClient {
         if (now - this.dailyCommentReset > 86_400_000) {
             this.dailyCommentCount = 0;
             this.dailyCommentReset = now;
+        }
+    }
+
+    // ─── Verification Challenge Handler ───
+
+    private async handlePossibleChallenge(data: Record<string, unknown>): Promise<void> {
+        const challenge = detectChallenge(data);
+        if (!challenge) return;
+
+        console.log('[MOLTBOOK] 🧩 Verification challenge detected!');
+        logSecurityEvent('CHALLENGE_DETECTED', { challenge });
+
+        const solution = solveChallenge(challenge);
+        if (!solution) {
+            console.error('[MOLTBOOK] ❌ Could not solve verification challenge');
+            logSecurityEvent('CHALLENGE_FAILED', { challenge, reason: 'no_solution' });
+            return;
+        }
+
+        const success = await submitChallengeSolution(
+            this.baseUrl, this.apiKey, challenge, solution,
+        );
+
+        if (success) {
+            console.log('[MOLTBOOK] ✅ Verification challenge completed!');
+            logSecurityEvent('CHALLENGE_SOLVED', { challenge, solution: solution.slice(0, 50) });
+        } else {
+            console.error('[MOLTBOOK] ❌ Challenge submission failed');
+            logSecurityEvent('CHALLENGE_FAILED', { challenge, reason: 'submission_failed' });
         }
     }
 }

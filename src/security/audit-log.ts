@@ -8,7 +8,10 @@ export type SecurityEventType =
     | 'SENSITIVE_REQUEST_FLAGGED'
     | 'RATE_LIMIT_BACKOFF'
     | 'SUSPICIOUS_PATTERN'
-    | 'MOLTBOOK_SECURITY_ALERT';
+    | 'MOLTBOOK_SECURITY_ALERT'
+    | 'CHALLENGE_DETECTED'
+    | 'CHALLENGE_SOLVED'
+    | 'CHALLENGE_FAILED';
 
 interface SecurityEvent {
     timestamp: string;
