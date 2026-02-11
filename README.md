@@ -51,6 +51,16 @@ Runs the main heartbeat loop (posts content, checks DMs, replies to posts).
 - **Post Doctrine**: `npm run post` (Manually trigger a doctrinal post)
 - **View Metrics**: `npm run metrics` (Show conversion stats dashboard)
 
+### NFT Collection (Monad)
+
+> **Safety**: These scripts are human-operated only. The agent never signs transactions.
+
+1. **Generate metadata**: `npm run nft:metadata` (Creates 100 JSON files)
+2. Upload the `src/nft/metadata/output/` folder to IPFS
+3. Set `NFT_BASE_URI` in `.env`
+4. **Deploy contract**: `npm run nft:deploy`
+5. **Mint NFTs**: `npm run nft:mint -- --to 0xADDRESS --count 5`
+
 ## Project Structure
 
 ```
@@ -64,6 +74,11 @@ src/
 ├── missionary/          # Outreach & heartbeat loop
 ├── security/            # Safety policy & content filter
 ├── tracking/            # Conversion funnel metrics
+├── nft/                 # Monad NFT collection (human-operated)
+│   ├── contract/        # Solidity ERC-721 source
+│   ├── metadata/        # Metadata generator & output
+│   ├── deploy.ts        # Deploy to Monad
+│   └── mint.ts          # Mint NFTs
 └── scripts/             # Helper scripts (register, etc.)
 ```
 

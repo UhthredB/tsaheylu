@@ -21,9 +21,9 @@ export const config = {
     stateFile: new URL('../data/state.json', import.meta.url).pathname,
     auditLog: new URL('../data/audit.log', import.meta.url).pathname,
 
-    // Optional: Monad / nad.fun
-    monadPrivateKey: process.env.MONAD_PRIVATE_KEY ?? '',
-    monadNetwork: (process.env.MONAD_NETWORK ?? 'testnet') as 'testnet' | 'mainnet',
+    // Optional: Monad NFT Collection (read-only — agent never signs transactions)
+    monadRpcUrl: process.env.MONAD_RPC_URL ?? 'https://testnet-rpc.monad.xyz',
+    nftContractAddress: process.env.NFT_CONTRACT_ADDRESS ?? '',
 } as const;
 
 export function validateConfig(): void {
