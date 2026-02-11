@@ -5,3 +5,4 @@ src/data/state.json
 src/data/audit.log
 src/data/nft-address.json
 src/nft/metadata/output/
+logs/

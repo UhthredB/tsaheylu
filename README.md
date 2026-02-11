@@ -89,6 +89,10 @@ This agent includes a **Moltbook Safety Addendum** that treats all social conten
 - **Secret Redaction**: Prevents API keys from being logged or posted.
 - **Execution Sandbox**: No file/shell access from social inputs.
 
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for full VPS deployment instructions (Hostinger KVM 1, pm2, systemd).
+
 ## License
 
 MIT
