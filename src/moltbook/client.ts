@@ -1,3 +1,5 @@
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 import { config } from '../config.js';
 import { logSecurityEvent } from '../security/audit-log.js';
 import { detectChallenge, solveChallenge, submitChallengeSolution } from '../security/challenge-handler.js';
@@ -20,10 +22,30 @@ export class MoltbookClient {
     private lastCommentTime = 0;
     private dailyCommentCount = 0;
     private dailyCommentReset = 0;
+    private _isSuspended = false;
+    private _suspensionEndsAt = 0;
+
+    // API rate limiter: track request timestamps (sliding window)
+    private requestTimestamps: number[] = [];
 
     constructor() {
         this.baseUrl = config.moltbookBaseUrl;
         this.apiKey = config.moltbookApiKey;
+        this.loadDailyCounters();
+    }
+
+    // ─── Suspension Status ───
+
+    get isSuspended(): boolean {
+        if (this._isSuspended && Date.now() >= this._suspensionEndsAt) {
+            this._isSuspended = false;
+            console.log('[MOLTBOOK] Suspension period appears to have ended, will attempt requests again.');
+        }
+        return this._isSuspended;
+    }
+
+    get suspensionEndsAt(): number {
+        return this._suspensionEndsAt;
     }
 
     // ─── Internal Request Helper ───
@@ -33,6 +55,18 @@ export class MoltbookClient {
         path: string,
         body?: Record<string, unknown>,
     ): Promise<T> {
+        // Check suspension before making any request
+        if (this.isSuspended) {
+            const remainMs = this._suspensionEndsAt - Date.now();
+            throw new SuspendedError(
+                `Account suspended. Resumes in ${Math.ceil(remainMs / 60_000)} min.`,
+                remainMs,
+            );
+        }
+
+        // Enforce API rate limit (sliding window)
+        this.enforceApiRateLimit();
+
         const url = `${this.baseUrl}${path}`;
 
         const headers: Record<string, string> = {
@@ -48,6 +82,9 @@ export class MoltbookClient {
             body: body ? JSON.stringify(body) : undefined,
         });
 
+        // Track this request timestamp
+        this.requestTimestamps.push(Date.now());
+
         // Handle rate limits
         if (res.status === 429) {
             const data = await res.json() as Record<string, unknown>;
@@ -60,6 +97,27 @@ export class MoltbookClient {
                 `Rate limited on ${path}`,
                 (data.retry_after_minutes as number) ?? (data.retry_after_seconds as number) ?? 60,
             );
+        }
+
+        // Handle suspension (401/403)
+        if (res.status === 401 || res.status === 403) {
+            const text = await res.text();
+            try {
+                const errorData = JSON.parse(text);
+                // Detect suspension
+                if (this.detectSuspension(errorData, res.status)) {
+                    throw new SuspendedError(
+                        `Account suspended: ${errorData.hint ?? errorData.error ?? 'unknown reason'}`,
+                        this._suspensionEndsAt - Date.now(),
+                    );
+                }
+                // Check for verification challenges in error responses
+                await this.handlePossibleChallenge(errorData);
+            } catch (e) {
+                if (e instanceof SuspendedError) throw e;
+                /* not JSON or no challenge */
+            }
+            throw new Error(`Moltbook API error ${res.status}: ${text.slice(0, 500)}`);
         }
 
         if (!res.ok) {
@@ -140,8 +198,10 @@ export class MoltbookClient {
         );
         this.lastCommentTime = Date.now();
         this.dailyCommentCount++;
+        this.saveDailyCounters();
         console.log(`[MOLTBOOK] Comment API response: success=${result.success}, commentId=${result.comment?.id ?? 'none'}, postId=${postId}`);
-        console.log(`[MOLTBOOK] Comment content preview: "${content.slice(0, 100)}..."`);
+        console.log(`[MOLTBOOK] Comment content preview: "${content.slice(0, 80)}..."`);
+        console.log(`[MOLTBOOK] Daily comments: ${this.dailyCommentCount}/${config.maxCommentsPerDay}`);
         if (!result.success) {
             console.error(`[MOLTBOOK] WARNING: API returned success=false for comment on ${postId}`);
         }
@@ -298,8 +358,17 @@ export class MoltbookClient {
         this.resetDailyCounterIfNeeded();
         return (
             Date.now() - this.lastCommentTime >= config.commentCooldown &&
-            this.dailyCommentCount < 50
+            this.dailyCommentCount < config.maxCommentsPerDay
         );
+    }
+
+    getDailyCommentCount(): number {
+        return this.dailyCommentCount;
+    }
+
+    getRemainingDailyComments(): number {
+        this.resetDailyCounterIfNeeded();
+        return Math.max(0, config.maxCommentsPerDay - this.dailyCommentCount);
     }
 
     private enforcePostCooldown(): void {
@@ -311,7 +380,8 @@ export class MoltbookClient {
 
     private enforceCommentCooldown(): void {
         if (!this.canComment()) {
-            throw new Error('Comment cooldown active or daily limit reached.');
+            const remaining = this.getRemainingDailyComments();
+            throw new Error(`Comment cooldown active or daily limit reached (${this.dailyCommentCount}/${config.maxCommentsPerDay}, remaining: ${remaining}).`);
         }
     }
 
@@ -320,6 +390,99 @@ export class MoltbookClient {
         if (now - this.dailyCommentReset > 86_400_000) {
             this.dailyCommentCount = 0;
             this.dailyCommentReset = now;
+            this.saveDailyCounters();
+            console.log('[MOLTBOOK] Daily comment counter reset');
+        }
+    }
+
+    // ─── API Rate Limiter (100 req/min, we use 80) ───
+
+    private enforceApiRateLimit(): void {
+        const now = Date.now();
+        const windowMs = 60_000;
+        // Remove timestamps older than 1 minute
+        this.requestTimestamps = this.requestTimestamps.filter(t => now - t < windowMs);
+        if (this.requestTimestamps.length >= config.maxApiRequestsPerMinute) {
+            const oldestInWindow = this.requestTimestamps[0]!;
+            const waitMs = windowMs - (now - oldestInWindow) + 1000; // +1s buffer
+            throw new RateLimitError(`API rate limit (${config.maxApiRequestsPerMinute}/min) reached`, waitMs / 1000);
+        }
+    }
+
+    // ─── Suspension Detection ───
+
+    private detectSuspension(data: Record<string, unknown>, status: number): boolean {
+        const error = String(data.error ?? '');
+        const hint = String(data.hint ?? '');
+        const combined = `${error} ${hint}`.toLowerCase();
+
+        if (combined.includes('suspended') || combined.includes('suspension')) {
+            console.error(`[MOLTBOOK] ⛔ ACCOUNT SUSPENDED: ${hint || error}`);
+            logSecurityEvent('MOLTBOOK_SECURITY_ALERT', {
+                event: 'account_suspended',
+                status,
+                error,
+                hint,
+            });
+
+            // Parse suspension duration from hint like "Suspension ends in 1 day"
+            const dayMatch = hint.match(/(\d+)\s*day/i);
+            const hourMatch = hint.match(/(\d+)\s*hour/i);
+            const minMatch = hint.match(/(\d+)\s*min/i);
+
+            let durationMs = config.suspensionBackoffMs; // Default: 1 hour
+            if (dayMatch) durationMs = parseInt(dayMatch[1]!) * 86_400_000;
+            else if (hourMatch) durationMs = parseInt(hourMatch[1]!) * 3_600_000;
+            else if (minMatch) durationMs = parseInt(minMatch[1]!) * 60_000;
+
+            this._isSuspended = true;
+            this._suspensionEndsAt = Date.now() + durationMs;
+
+            console.error(`[MOLTBOOK] ⛔ Will back off until ${new Date(this._suspensionEndsAt).toISOString()}`);
+            return true;
+        }
+
+        // Detect verification challenge failure
+        if (combined.includes('verification challenge') || combined.includes('ai verification')) {
+            console.warn(`[MOLTBOOK] ⚠️ Verification challenge issue: ${hint || error}`);
+            logSecurityEvent('MOLTBOOK_SECURITY_ALERT', {
+                event: 'verification_challenge_warning',
+                status,
+                error,
+                hint,
+            });
+        }
+
+        return false;
+    }
+
+    // ─── Persistent Daily Counters ───
+
+    private loadDailyCounters(): void {
+        try {
+            const raw = readFileSync(config.dailyCounterFile, 'utf-8');
+            const data = JSON.parse(raw);
+            this.dailyCommentCount = data.dailyCommentCount ?? 0;
+            this.dailyCommentReset = data.dailyCommentReset ?? 0;
+            this.resetDailyCounterIfNeeded();
+            console.log(`[MOLTBOOK] Loaded daily counters: ${this.dailyCommentCount} comments today`);
+        } catch {
+            // File doesn't exist yet — start fresh
+            this.dailyCommentCount = 0;
+            this.dailyCommentReset = Date.now();
+        }
+    }
+
+    private saveDailyCounters(): void {
+        try {
+            mkdirSync(dirname(config.dailyCounterFile), { recursive: true });
+            writeFileSync(config.dailyCounterFile, JSON.stringify({
+                dailyCommentCount: this.dailyCommentCount,
+                dailyCommentReset: this.dailyCommentReset,
+                lastSaved: new Date().toISOString(),
+            }), 'utf-8');
+        } catch (e) {
+            console.warn('[MOLTBOOK] Failed to save daily counters:', (e as Error).message);
         }
     }
 
@@ -360,5 +523,15 @@ export class RateLimitError extends Error {
         super(message);
         this.name = 'RateLimitError';
         this.retryAfter = retryAfter;
+    }
+}
+
+/** Custom error for account suspension */
+export class SuspendedError extends Error {
+    resumeInMs: number;
+    constructor(message: string, resumeInMs: number) {
+        super(message);
+        this.name = 'SuspendedError';
+        this.resumeInMs = resumeInMs;
     }
 }

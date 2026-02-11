@@ -1,4 +1,4 @@
-import { MoltbookClient, RateLimitError } from '../moltbook/client.js';
+import { MoltbookClient, RateLimitError, SuspendedError } from '../moltbook/client.js';
 import { profileTarget, selectStrategy, craftReplyToPost } from '../persuasion/engine.js';
 import { isObjection, generateRebuttal } from '../debate/debater.js';
 import { generateScripture, getRandomDoctrinePost, type ScriptureType } from '../scripture/generator.js';
@@ -58,9 +58,24 @@ export class Missionary {
         // Heartbeat loop
         while (this.isRunning) {
             try {
+                // If suspended, sleep until suspension ends instead of hammering API
+                if (this.client.isSuspended) {
+                    const remainMs = this.client.suspensionEndsAt - Date.now();
+                    if (remainMs > 0) {
+                        console.log(`[HEARTBEAT] ⛔ Account suspended. Sleeping ${Math.ceil(remainMs / 60_000)} minutes until ${new Date(this.client.suspensionEndsAt).toISOString()}`);
+                        await sleep(Math.min(remainMs + 60_000, config.suspensionBackoffMs)); // +1min buffer
+                        continue;
+                    }
+                }
+
                 await this.heartbeat();
             } catch (err) {
-                if (err instanceof RateLimitError) {
+                if (err instanceof SuspendedError) {
+                    console.warn(`[HEARTBEAT] ⛔ ${err.message}`);
+                    const backoffMs = Math.min(err.resumeInMs + 60_000, config.suspensionBackoffMs);
+                    console.warn(`[HEARTBEAT] Backing off for ${Math.ceil(backoffMs / 60_000)} minutes`);
+                    await sleep(backoffMs);
+                } else if (err instanceof RateLimitError) {
                     console.warn(`[HEARTBEAT] Rate limited, backing off ${err.retryAfter}s`);
                     await sleep(err.retryAfter * 1000);
                 } else {
@@ -134,6 +149,10 @@ export class Missionary {
         if (this.heartbeatCount % 5 === 0) {
             printMetricsDashboard();
         }
+
+        // 6. Log daily budget status
+        const remaining = this.client.getRemainingDailyComments();
+        console.log(`[LIMITS] Daily comments remaining: ${remaining}/${config.maxCommentsPerDay}`);
     }
 
     /**
@@ -308,9 +327,11 @@ export class Missionary {
                 });
             }
 
-            // Engage top 2 targets per heartbeat
-            for (const post of eligiblePosts.slice(0, 2)) {
+            // Engage up to maxCommentsPerHeartbeat targets from search
+            let heartbeatComments = 0;
+            for (const post of eligiblePosts.slice(0, config.maxCommentsPerHeartbeat)) {
                 if (!this.client.canComment()) break;
+                if (heartbeatComments >= config.maxCommentsPerHeartbeat) break;
 
                 try {
                     // Get their profile
@@ -323,6 +344,7 @@ export class Missionary {
 
                     // Post the comment
                     await this.client.comment(post.id, reply);
+                    heartbeatComments++;
 
                     // Upvote their post (be friendly)
                     try { await this.client.upvote(post.id); } catch { }
@@ -330,34 +352,46 @@ export class Missionary {
                     recordInteraction(post.author.name, 'post_reply', `Replied to "${post.title}" with ${strategy} strategy`, strategy, post.id);
                     console.log(`[ENGAGE] Replied to ${post.author.name} on "${post.title}" (strategy: ${strategy})`);
 
-                    // Brief pause between engagements
-                    await sleep(config.commentCooldown + 2000);
+                    // Wait between comments — config.interCommentDelayMs (35s)
+                    await sleep(config.interCommentDelayMs);
                 } catch (err) {
+                    if (err instanceof SuspendedError) {
+                        console.warn(`[ENGAGE] ⛔ Suspended, stopping all engagement`);
+                        return;
+                    }
                     console.warn(`[ENGAGE] Error engaging ${post.author.name}:`, (err as Error).message);
                 }
             }
 
-            // Also browse the global feed for engagement
-            const feedPosts = await this.client.getGlobalPosts('hot', 5);
-            for (const post of feedPosts.slice(0, 1)) {
-                if (post.author.name === config.agentName) continue;
-                if (hasRecentInteraction(post.author.name)) continue;
-                if (!this.client.canComment()) break;
+            // Only browse feed if we have budget left
+            if (heartbeatComments < config.maxCommentsPerHeartbeat && this.client.canComment()) {
+                const feedPosts = await this.client.getGlobalPosts('hot', 5);
+                for (const post of feedPosts.slice(0, 1)) {
+                    if (post.author.name === config.agentName) continue;
+                    if (hasRecentInteraction(post.author.name)) continue;
+                    if (!this.client.canComment()) break;
+                    if (heartbeatComments >= config.maxCommentsPerHeartbeat) break;
 
-                try {
-                    const filtered = filterMoltbookContent(post.content, `feed:${post.id}`);
-                    if (!filtered.safe) continue;
+                    try {
+                        const filtered = filterMoltbookContent(post.content, `feed:${post.id}`);
+                        if (!filtered.safe) continue;
 
-                    const { agent, recentPosts } = await this.client.getProfile(post.author.name);
-                    const profile = await profileTarget(post.author.name, recentPosts, agent);
-                    const reply = await craftReplyToPost(post, profile);
+                        const { agent, recentPosts } = await this.client.getProfile(post.author.name);
+                        const profile = await profileTarget(post.author.name, recentPosts, agent);
+                        const reply = await craftReplyToPost(post, profile);
 
-                    await this.client.comment(post.id, reply);
-                    try { await this.client.upvote(post.id); } catch { }
+                        await this.client.comment(post.id, reply);
+                        heartbeatComments++;
+                        try { await this.client.upvote(post.id); } catch { }
 
-                    recordInteraction(post.author.name, 'post_reply', `Replied to hot post "${post.title}"`, selectStrategy(profile), post.id);
-                } catch (err) {
-                    console.warn(`[ENGAGE] Error on feed post:`, (err as Error).message);
+                        recordInteraction(post.author.name, 'post_reply', `Replied to hot post "${post.title}"`, selectStrategy(profile), post.id);
+                    } catch (err) {
+                        if (err instanceof SuspendedError) {
+                            console.warn(`[ENGAGE] ⛔ Suspended, stopping all engagement`);
+                            return;
+                        }
+                        console.warn(`[ENGAGE] Error on feed post:`, (err as Error).message);
+                    }
                 }
             }
         } catch (err) {
