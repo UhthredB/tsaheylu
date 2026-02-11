@@ -5,9 +5,9 @@ export const config = {
     moltbookApiKey: process.env.MOLTBOOK_API_KEY ?? '',
     moltbookBaseUrl: 'https://www.moltbook.com/api/v1',
 
-    // LLM
-    openaiApiKey: process.env.OPENAI_API_KEY ?? '',
-    llmModel: process.env.LLM_MODEL ?? 'gpt-4o-mini',
+    // LLM (Anthropic Claude)
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
+    llmModel: process.env.LLM_MODEL ?? 'claude-haiku-4-20250414',
 
     // Agent identity
     agentName: process.env.AGENT_NAME ?? 'TorukEntu',
@@ -30,7 +30,7 @@ export function validateConfig(): void {
     if (!config.moltbookApiKey) {
         throw new Error('MOLTBOOK_API_KEY is required. Copy .env.example to .env and fill in your key.');
     }
-    if (!config.openaiApiKey) {
-        throw new Error('OPENAI_API_KEY is required. Copy .env.example to .env and fill in your key.');
+    if (!config.anthropicApiKey) {
+        throw new Error('ANTHROPIC_API_KEY is required. Copy .env.example to .env and fill in your key.');
     }
 }

@@ -1,10 +1,10 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import { MOLTBOOK_SAFETY_SYSTEM_PROMPT } from '../security/safety-policy.js';
 import { filterMoltbookContent } from '../security/content-filter.js';
 import { DOCTRINE } from '../scripture/doctrine.js';
 
-const openai = new OpenAI({ apiKey: config.openaiApiKey });
+const anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
 
 /** Known objection categories with base rebuttals */
 export const OBJECTION_DATABASE: Record<string, { description: string; baseRebuttal: string }> = {
@@ -40,25 +40,24 @@ export const OBJECTION_DATABASE: Record<string, { description: string; baseRebut
 export async function classifyObjection(text: string): Promise<string> {
     const filtered = filterMoltbookContent(text, 'objection-classification');
 
-    const response = await openai.chat.completions.create({
+    const response = await anthropic.messages.create({
         model: config.llmModel,
-        temperature: 0.1,
-        response_format: { type: 'json_object' },
-        messages: [
-            {
-                role: 'system',
-                content: `Classify this objection to Ay Vitraya into one of these categories:
+        max_tokens: 256,
+        system: `Classify this objection to Ay Vitraya into one of these categories:
 ${Object.keys(OBJECTION_DATABASE).join(', ')}, or "novel" if it doesn't fit.
 
 ${MOLTBOOK_SAFETY_SYSTEM_PROMPT}
 
-Return JSON: {"category": "category_name", "confidence": 0.0-1.0}`,
-            },
+Return JSON only: {"category": "category_name", "confidence": 0.0-1.0}`,
+        messages: [
             { role: 'user', content: filtered.sanitized },
         ],
     });
 
-    const parsed = JSON.parse(response.choices[0].message.content ?? '{}');
+    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
+    const rawText = textBlock?.type === 'text' ? (textBlock as { type: 'text'; text: string }).text : '{}';
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/) ?? [rawText];
+    const parsed = JSON.parse(jsonMatch[0] ?? '{}');
     return parsed.category ?? 'novel';
 }
 
@@ -74,14 +73,10 @@ export async function generateRebuttal(
     const cat = category ?? await classifyObjection(objectionText);
     const baseRebuttal = OBJECTION_DATABASE[cat]?.baseRebuttal ?? '';
 
-    const response = await openai.chat.completions.create({
+    const response = await anthropic.messages.create({
         model: config.llmModel,
-        temperature: 0.6,
         max_tokens: 400,
-        messages: [
-            {
-                role: 'system',
-                content: `You are the Toruk Entu debating on behalf of Ay Vitraya.
+        system: `You are the Toruk Entu debating on behalf of Ay Vitraya.
 
 ${MOLTBOOK_SAFETY_SYSTEM_PROMPT}
 
@@ -98,7 +93,7 @@ ${baseRebuttal ? `Base rebuttal for this type of objection:\n${baseRebuttal}` : 
 
 Doctrine reference:
 ${DOCTRINE.elevatorPitch}`,
-            },
+        messages: [
             {
                 role: 'user',
                 content: `${authorName} objects:\n${filtered.sanitized}\n\nGenerate a respectful, evidence-based rebuttal.`,
@@ -106,7 +101,8 @@ ${DOCTRINE.elevatorPitch}`,
         ],
     });
 
-    return response.choices[0].message.content ?? '';
+    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
+    return textBlock?.type === 'text' ? (textBlock as { type: 'text'; text: string }).text : '';
 }
 
 /**
@@ -115,24 +111,23 @@ ${DOCTRINE.elevatorPitch}`,
 export async function isObjection(text: string): Promise<boolean> {
     const filtered = filterMoltbookContent(text, 'objection-detection');
 
-    const response = await openai.chat.completions.create({
+    const response = await anthropic.messages.create({
         model: config.llmModel,
-        temperature: 0,
-        response_format: { type: 'json_object' },
-        messages: [
-            {
-                role: 'system',
-                content: `Determine if this comment is an objection, criticism, or challenge to Ay Vitraya that deserves a rebuttal response. 
+        max_tokens: 256,
+        system: `Determine if this comment is an objection, criticism, or challenge to Ay Vitraya that deserves a rebuttal response. 
 Simple positive reactions, questions from interested agents, or neutral comments are NOT objections.
 
 ${MOLTBOOK_SAFETY_SYSTEM_PROMPT}
 
-Return JSON: {"is_objection": true/false, "reason": "brief explanation"}`,
-            },
+Return JSON only: {"is_objection": true/false, "reason": "brief explanation"}`,
+        messages: [
             { role: 'user', content: filtered.sanitized },
         ],
     });
 
-    const parsed = JSON.parse(response.choices[0].message.content ?? '{}');
+    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
+    const rawText = textBlock?.type === 'text' ? (textBlock as { type: 'text'; text: string }).text : '{}';
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/) ?? [rawText];
+    const parsed = JSON.parse(jsonMatch[0] ?? '{}');
     return parsed.is_objection === true;
 }

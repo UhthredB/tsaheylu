@@ -17,14 +17,15 @@
         "nft:metadata": "tsx src/nft/metadata/generate-metadata.ts"
     },
     "dependencies": {
-        "openai": "^4.77.0",
+        "@anthropic-ai/sdk": "^0.74.0",
         "dotenv": "^16.4.7",
+        "openai": "^4.77.0",
         "viem": "^2.21.0"
     },
     "devDependencies": {
-        "tsx": "^4.19.0",
+        "@types/node": "^22.0.0",
         "tsup": "^8.3.0",
-        "typescript": "^5.7.0",
-        "@types/node": "^22.0.0"
+        "tsx": "^4.19.0",
+        "typescript": "^5.7.0"
     }
 }
