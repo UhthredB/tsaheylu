@@ -7,7 +7,7 @@ export const config = {
 
     // LLM (Anthropic Claude)
     anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
-    llmModel: process.env.LLM_MODEL ?? 'claude-haiku-4-20250414',
+    llmModel: process.env.LLM_MODEL ?? 'claude-3-5-haiku-20241022',
 
     // Agent identity
     agentName: process.env.AGENT_NAME ?? 'TorukEntu',
