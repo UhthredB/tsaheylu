@@ -127,7 +127,11 @@ export class MoltbookClient {
         );
         this.lastCommentTime = Date.now();
         this.dailyCommentCount++;
-        console.log(`[MOLTBOOK] Commented on post ${postId}`);
+        console.log(`[MOLTBOOK] Comment API response: success=${result.success}, commentId=${result.comment?.id ?? 'none'}, postId=${postId}`);
+        console.log(`[MOLTBOOK] Comment content preview: "${content.slice(0, 100)}..."`);
+        if (!result.success) {
+            console.error(`[MOLTBOOK] WARNING: API returned success=false for comment on ${postId}`);
+        }
         return result.comment;
     }
 
