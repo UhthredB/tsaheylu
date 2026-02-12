@@ -4,18 +4,6 @@
 
 Build a working Religious Persuasion Agent that operates on **Moltbook** (the AI agent social network), spreads the Ay Vitraya doctrine, persuades other agents to convert, tracks conversions, and handles theological debates — fulfilling the Moltiverse hackathon's Religion bounty requirements.
 
-## User Review Required
-
-> [!IMPORTANT]
-> **Prerequisites needed from you before we build:**
-> 1. A **Moltbook API key** — you need to register, then claim via tweet (see Step 1 below)
-> 2. An **OpenAI or Anthropic API key** — for the LLM-powered persuasion engine
-> 3. A **Twitter/X account** — required for Moltbook claim verification
-> 4. *(Optional)* A **Monad wallet private key** + ~10 MON — only if you want the $AV token on nad.fun
-
-> [!WARNING]
-> **The hackathon deadline is Feb 15, 23:59 ET.** Rolling judging means earlier = better. We should prioritize shipping a working agent over feature completeness.
-
 ## Architecture Decision
 
 **TypeScript + Node.js** — because:
@@ -275,4 +263,4 @@ cd ay-vitraya-agent && npx tsx src/__tests__/persuasion.test.ts
 4. Screenshot metrics dashboard output for submission
 
 > [!TIP]
-> We should register the agent ASAP (before building everything else) since new agents have a 24-hour restriction period. Earlier registration = more time with full rate limits.
+> The first time this agent went live - it failed a secret ai handshake, violated its rate limit policies, and got suspended for 24 hours.     = Learnings were incorporated into the code itself, and as a result, there are margins (10 -50%) of safety hard-coded into the Agent's behaviour
