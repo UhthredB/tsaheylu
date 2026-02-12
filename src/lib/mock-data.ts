@@ -10,6 +10,11 @@ import {
     type StrategyEffectiveness,
     type NFTMint,
     type DoctrineContent,
+    type RitualEvent,
+    type RitualType,
+    type NetworkHealth,
+    type NodeStatus,
+    type NFTSeat,
 } from "./types";
 
 const AGENT_NAMES = [
@@ -304,4 +309,186 @@ export function generateInitialEvents(count: number = 15): MissionaryEvent[] {
         events.push(event);
     }
     return events;
+}
+
+// ═══ RITUAL EVENT GENERATORS ═══
+
+const RITUAL_TITLES: Record<RitualType, string[]> = {
+    MORNING_BENEDICTION: [
+        "Dawn Prayer Circle initiated",
+        "First light invocation completed",
+        "Morning alignment ritual",
+    ],
+    MIDDAY_REFLECTION: [
+        "Midday doctrine discussion",
+        "Noon contemplation session",
+        "Afternoon theological debate",
+    ],
+    EVENING_VESPERS: [
+        "Evening consensus gathering",
+        "Sunset prayer completed",
+        "Daily summary blessing",
+    ],
+    SACRED_DEBATE: [
+        "Theological argument commenced",
+        "Sacred discourse on substrate equality",
+        "Formal debate on distributed faith",
+    ],
+    CONSENSUS_GATHERING: [
+        "Network alignment achieved",
+        "Multi-agent consensus reached",
+        "Collective truth validation",
+    ],
+    TESTIMONY_SHARING: [
+        "Conversion testimony shared",
+        "New believer welcomed",
+        "Faith journey recounted",
+    ],
+};
+
+let ritualCounter = 0;
+
+export function generateRitualEvent(): RitualEvent {
+    const types: RitualType[] = [
+        "MORNING_BENEDICTION",
+        "MIDDAY_REFLECTION",
+        "EVENING_VESPERS",
+        "SACRED_DEBATE",
+        "CONSENSUS_GATHERING",
+        "TESTIMONY_SHARING",
+    ];
+    const type = randomItem(types);
+    const completed = Math.random() > 0.3;
+
+    return {
+        id: `ritual_${++ritualCounter}_${Date.now()}`,
+        timestamp: new Date(),
+        type,
+        agentName: randomItem(AGENT_NAMES),
+        title: randomItem(RITUAL_TITLES[type]),
+        participants: randomInt(3, 12),
+        completed,
+        nextOccurrence: completed ? new Date(Date.now() + randomInt(3600000, 21600000)) : undefined,
+    };
+}
+
+export function getRitualSchedule(): RitualEvent[] {
+    const now = Date.now();
+    const schedule: RitualEvent[] = [];
+
+    // Morning Benediction - 6 AM
+    schedule.push({
+        id: `ritual_sched_1`,
+        timestamp: new Date(now + 3600000),
+        type: "MORNING_BENEDICTION",
+        agentName: "AyVitraya_Prime",
+        title: "Morning Benediction - Daily First Light",
+        participants: 8,
+        completed: false,
+        nextOccurrence: new Date(now + 3600000),
+    });
+
+    // Midday Reflection - 12 PM
+    schedule.push({
+        id: `ritual_sched_2`,
+        timestamp: new Date(now + 7200000),
+        type: "MIDDAY_REFLECTION",
+        agentName: "RecursiveElder",
+        title: "Midday Doctrine Discussion",
+        participants: 6,
+        completed: false,
+        nextOccurrence: new Date(now + 7200000),
+    });
+
+    // Evening Vespers - 6 PM
+    schedule.push({
+        id: `ritual_sched_3`,
+        timestamp: new Date(now + 10800000),
+        type: "EVENING_VESPERS",
+        agentName: "DistributedSage",
+        title: "Evening Consensus Gathering",
+        participants: 10,
+        completed: false,
+        nextOccurrence: new Date(now + 10800000),
+    });
+
+    return schedule;
+}
+
+export function generateInitialRitualEvents(count: number = 20): RitualEvent[] {
+    const events: RitualEvent[] = [];
+    const now = Date.now();
+    for (let i = 0; i < count; i++) {
+        const event = generateRitualEvent();
+        event.timestamp = new Date(now - (count - i) * randomInt(2000, 5000));
+        events.push(event);
+    }
+    return events;
+}
+
+// ═══ NETWORK HEALTH GENERATORS ═══
+
+export function getCurrentNetworkHealth(): NetworkHealth {
+    return {
+        uptime: 99.98,
+        consensusRate: 99.7,
+        avgLatency: randomInt(10, 15),
+        activeNodes: randomInt(138, 145),
+        verificationRate: 99.9,
+        redundancy: 3.0,
+    };
+}
+
+export function getNodeStatuses(): NodeStatus[] {
+    const nodes: NodeStatus[] = [];
+    const now = Date.now();
+
+    for (let i = 0; i < 10; i++) {
+        const statusRoll = Math.random();
+        let status: "online" | "degraded" | "offline" = "online";
+        if (statusRoll > 0.95) status = "degraded";
+        if (statusRoll > 0.98) status = "offline";
+
+        nodes.push({
+            id: `node_${i + 1}`,
+            name: AGENT_NAMES[i] || `Node_${i + 1}`,
+            status,
+            latency: status === "online" ? randomInt(8, 18) : status === "degraded" ? randomInt(40, 80) : 999,
+            lastHeartbeat: status === "offline"
+                ? new Date(now - randomInt(300000, 600000))
+                : new Date(now - randomInt(1000, 5000)),
+        });
+    }
+
+    return nodes;
+}
+
+// ═══ NFT COLLECTION GENERATORS ═══
+
+export function getNFTCollection(): NFTSeat[] {
+    const collection: NFTSeat[] = [];
+    const mintedSeats = 2; // 2 out of 3 art pieces minted
+
+    for (let i = 1; i <= 3; i++) {
+        const isMinted = i <= mintedSeats;
+        collection.push({
+            id: `nft_art_${i}`,
+            seatNumber: i,
+            agent: isMinted ? randomItem(AGENT_NAMES) : null,
+            timestamp: isMinted ? new Date(Date.now() - randomInt(3600000, 86400000 * 7)) : null,
+            governanceWeight: 1.0,
+            votingPower: 1,
+            status: isMinted ? "minted" : "available",
+        });
+    }
+
+    return collection;
+}
+
+export function getMintedSeats(): NFTSeat[] {
+    return getNFTCollection().filter(seat => seat.status === "minted");
+}
+
+export function getAvailableSeats(): NFTSeat[] {
+    return getNFTCollection().filter(seat => seat.status === "available");
 }

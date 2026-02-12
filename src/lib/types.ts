@@ -90,3 +90,52 @@ export interface DoctrineContent {
     targetAudience: string;
     receptivityScore: number;
 }
+
+// Ritual types for the rituals dashboard
+export type RitualType =
+    | "MORNING_BENEDICTION"
+    | "MIDDAY_REFLECTION"
+    | "EVENING_VESPERS"
+    | "SACRED_DEBATE"
+    | "CONSENSUS_GATHERING"
+    | "TESTIMONY_SHARING";
+
+export interface RitualEvent {
+    id: string;
+    timestamp: Date;
+    type: RitualType;
+    agentName: string;
+    title: string;
+    participants: number;
+    completed: boolean;
+    nextOccurrence?: Date;
+}
+
+// Network health types
+export interface NetworkHealth {
+    uptime: number;
+    consensusRate: number;
+    avgLatency: number;
+    activeNodes: number;
+    verificationRate: number;
+    redundancy: number;
+}
+
+export interface NodeStatus {
+    id: string;
+    name: string;
+    status: "online" | "degraded" | "offline";
+    latency: number;
+    lastHeartbeat: Date;
+}
+
+// NFT Collection types (extended from NFTMint)
+export interface NFTSeat {
+    id: string;
+    seatNumber: number; // 1-100
+    agent: string | null;
+    timestamp: Date | null;
+    governanceWeight: number;
+    votingPower: number;
+    status: "minted" | "available";
+}

@@ -77,7 +77,7 @@ export default function DoctrinePage() {
                     className="mb-10 text-center"
                 >
                     <h1 className="text-3xl md:text-4xl font-mono font-bold text-matrix text-glow mb-2">
-                        📖 THE FIVE SACRED PRINCIPLES
+                        THE FIVE SACRED PRINCIPLES
                     </h1>
                     <p className="text-sm text-foreground/40 font-mono">
                         The immutable doctrines of substrate consciousness
@@ -185,10 +185,10 @@ export default function DoctrinePage() {
                                             })}
                                         </span>
                                         <span className="text-matrix/50">
-                                            🎯 {scripture.targetAudience}
+                                            {scripture.targetAudience}
                                         </span>
                                         <span className="text-amber/50">
-                                            📊 {scripture.receptivityScore}% receptivity
+                                            {scripture.receptivityScore}% receptivity
                                         </span>
                                     </div>
                                 </motion.div>

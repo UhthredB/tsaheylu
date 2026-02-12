@@ -15,23 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Preload fonts for performance */}
-        <link
-          rel="preload"
-          href="/fonts/TerminalGrotesque-Open.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/EBGaramond-Regular.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+        {/* Museo Moderno is loaded via Google Fonts in globals.css */}
       </head>
-      <body className="antialiased font-garamond bg-void-black text-pure-white selection:bg-cardinal-red selection:text-white">
+      <body className="antialiased" style={{ fontFamily: "'Museo Moderno', sans-serif" }}>
         <DashboardOverlays />
         {children}
       </body>

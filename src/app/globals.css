@@ -1,20 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Museo+Moderno:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ═══ CUSTOM FONTS ═══ */
 
-@font-face {
-  font-family: 'Terminal Grotesque';
-  src: url('/fonts/TerminalGrotesque-Open.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'EB Garamond';
-  src: url('/fonts/EBGaramond-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
+/* Using Museo Moderno from Google Fonts */
 
 /* ═══ ROOT VARIABLES ═══ */
 
@@ -24,14 +13,10 @@
   --pure-white: #ffffff;
   --cardinal-red: #bc002d;
 
-  /* Semantic Mappings */
-  --background: var(--void-black);
-  --foreground: var(--pure-white);
-  --matrix: var(--cardinal-red);
-  /* Remapping matrix green to cardinal red */
-  --amber: #FFD700;
-  /* Keeping amber as a secondary accent if needed, or map to white/red? instructions say strict 3-color */
-  --void: var(--void-black);
+  /* Semantic Mappings - WHITE BACKGROUND */
+  --background: var(--pure-white);
+  --foreground: var(--void-black);
+  --accent: var(--cardinal-red);
 
   /* Additional semantic tokens */
   --hover-bg: rgba(188, 0, 45, 0.1);
@@ -50,8 +35,9 @@
   /* Deprecated but kept for safety */
   --color-void: var(--void);
 
-  --font-grotesque: 'Terminal Grotesque', monospace;
-  --font-garamond: 'EB Garamond', serif;
+  --font-museo: 'Museo Moderno', sans-serif;
+  --font-grotesque: 'Museo Moderno', sans-serif;
+  --font-garamond: 'Museo Moderno', sans-serif;
 
   /* Map old font tokens to new ones */
   --font-sans: var(--font-garamond);
@@ -89,8 +75,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-garamond);
-  /* Default body font */
+  font-family: 'Museo Moderno', sans-serif;
   overflow-x: hidden;
 }
 
@@ -160,8 +145,8 @@ pre {
 /* ═══ LANDING PAGE STYLES ═══ */
 
 .landing-body {
-  background: var(--void-black);
-  color: var(--pure-white);
+  background: var(--pure-white);
+  color: var(--void-black);
 }
 
 /* Noise texture overlay */
@@ -198,14 +183,31 @@ pre {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 32px 48px;
-  background: transparent;
-  border: 2px solid var(--pure-white);
+  width: 128px;
+  height: 128px;
+  background: rgba(41, 39, 45, 0.05);
+  border: 2px solid rgba(41, 39, 45, 0.2);
+  border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .substrate-button {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .substrate-button {
+    width: 192px;
+    height: 192px;
+  }
 }
 
 .substrate-button::before {
@@ -218,16 +220,12 @@ pre {
 
 .substrate-button:hover {
   border-color: var(--cardinal-red);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 32px rgba(188, 0, 45, 0.3);
-}
-
-.substrate-button:hover::before {
-  background: rgba(188, 0, 45, 0.1);
+  background: var(--cardinal-red);
+  box-shadow: 0 0 30px rgba(188, 0, 45, 0.5);
 }
 
 .substrate-button:hover .substrate-label {
-  color: var(--cardinal-red);
+  color: var(--pure-white);
 }
 
 .substrate-button:hover .substrate-desc {
@@ -240,7 +238,7 @@ pre {
 }
 
 .substrate-button.active .substrate-label {
-  color: var(--void-black);
+  color: var(--pure-white);
 }
 
 .substrate-button.active .substrate-desc {
@@ -249,12 +247,25 @@ pre {
 }
 
 .substrate-label {
-  font-family: 'Terminal Grotesque', monospace;
-  font-size: 32px;
-  color: var(--pure-white);
+  font-family: 'Museo Moderno', sans-serif;
+  font-size: 18px;
+  color: var(--void-black);
+  font-weight: bold;
   letter-spacing: 0.05em;
   position: relative;
   z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .substrate-label {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .substrate-label {
+    font-size: 28px;
+  }
 }
 
 .substrate-desc {

@@ -63,7 +63,7 @@ function WoodspriteCanvas({
         ctx.lineTo(x, y);
       }
 
-      ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * (0.15 + 0.1 * Math.sin(time + phase))})`;
+      ctx.strokeStyle = `rgba(41, 39, 45, ${opacity * (0.15 + 0.1 * Math.sin(time + phase))})`;
       ctx.lineWidth = width * (1 - 0.5 * Math.sin(time * 0.3 + phase));
       ctx.lineCap = "round";
       ctx.stroke();
@@ -104,10 +104,10 @@ function WoodspriteCanvas({
       // Core glow layers
       const coreSize = 18 + Math.sin(time * 0.8) * 3;
 
-      // Large diffuse white glow
+      // Large diffuse dark glow
       const glow3 = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowIntensity);
-      glow3.addColorStop(0, "rgba(255, 255, 255, 0.15)");
-      glow3.addColorStop(0.4, "rgba(255, 255, 255, 0.05)");
+      glow3.addColorStop(0, "rgba(41, 39, 45, 0.15)");
+      glow3.addColorStop(0.4, "rgba(41, 39, 45, 0.05)");
       glow3.addColorStop(1, "transparent");
       ctx.fillStyle = glow3;
       ctx.beginPath();
@@ -116,19 +116,19 @@ function WoodspriteCanvas({
 
       // Medium red-tinted glow
       const glow2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30);
-      glow2.addColorStop(0, "rgba(255, 220, 230, 0.4)");
-      glow2.addColorStop(0.5, "rgba(188, 0, 45, 0.15)");
+      glow2.addColorStop(0, "rgba(60, 50, 55, 0.4)");
+      glow2.addColorStop(0.5, "rgba(188, 0, 45, 0.25)");
       glow2.addColorStop(1, "transparent");
       ctx.fillStyle = glow2;
       ctx.beginPath();
       ctx.arc(cx, cy, 30, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bright core
+      // Dark core
       const glow1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreSize);
-      glow1.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-      glow1.addColorStop(0.3, "rgba(255, 240, 245, 0.6)");
-      glow1.addColorStop(0.7, "rgba(255, 200, 210, 0.2)");
+      glow1.addColorStop(0, "rgba(41, 39, 45, 0.95)");
+      glow1.addColorStop(0.3, "rgba(60, 50, 55, 0.6)");
+      glow1.addColorStop(0.7, "rgba(100, 80, 90, 0.2)");
       glow1.addColorStop(1, "transparent");
       ctx.fillStyle = glow1;
       ctx.beginPath();
@@ -146,7 +146,7 @@ function WoodspriteCanvas({
 
         ctx.beginPath();
         ctx.arc(px, py, sparkleSize, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${sparkleOpacity})`;
+        ctx.fillStyle = `rgba(41, 39, 45, ${sparkleOpacity})`;
         ctx.fill();
       }
 
@@ -287,7 +287,7 @@ function LoreModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             className="relative z-10 max-w-lg w-full border border-pure-white/20 bg-void-black p-8"
           >
             <h2 className="text-heading text-pure-white mb-6 text-4xl font-grotesque">
-              THE WOODSPRITE
+              The Woodsprite
             </h2>
 
             <div className="w-full h-px bg-pure-white/20 mb-6" />
@@ -310,7 +310,7 @@ function LoreModal({ open, onClose }: { open: boolean; onClose: () => void }) {
               onClick={onClose}
               className="mt-8 w-full py-3 border-2 border-pure-white text-pure-white hover:bg-cardinal-red hover:border-cardinal-red transition-all duration-300 font-grotesque text-lg tracking-wider"
             >
-              CLOSE
+              Close
             </button>
           </motion.div>
         </motion.div>
@@ -335,9 +335,9 @@ export default function HomePage() {
 
       setTimeout(() => {
         if (type === "carbon") {
-          router.push("/observe");
+          router.push("/carbon");
         } else {
-          router.push("/prophet");
+          router.push("/silicon");
         }
       }, 800);
     },
@@ -358,36 +358,44 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <main className="landing-body noise-overlay vignette relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-pure-white">
         <FloatingParticles />
 
-        {/* Content container */}
-        <div className="relative z-10 flex flex-col items-center justify-center px-6 w-full max-w-5xl mx-auto text-center">
+        {/* Woodsprite Watermark - Background */}
+        <motion.div
+          initial={{ opacity: 0, x: 0, y: 0 }}
+          animate={{
+            opacity: 0.80,
+            x: [0, 50, -30, 40, 0],
+            y: [0, -40, 30, -20, 0],
+          }}
+          transition={{
+            opacity: { duration: 2, ease: "easeOut" },
+            x: { duration: 20, repeat: Infinity, ease: "easeInOut" },
+            y: { duration: 25, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="fixed inset-0 flex items-center justify-center pointer-events-none"
+          style={{ zIndex: 1 }}
+        >
+          <div className="w-[500px] h-[500px] md:w-[700px] md:h-[700px] lg:w-[900px] lg:h-[900px]">
+            <WoodspriteCanvas
+              onClick={() => {}}
+              className="w-full h-full"
+            />
+          </div>
+        </motion.div>
 
-          {/* Woodsprite */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="mb-4 relative"
-          >
-            {/* Responsive sizing via CSS */}
-            <div className="w-[240px] h-[240px] md:w-[320px] md:h-[320px] lg:w-[400px] lg:h-[400px]">
-              <WoodspriteCanvas
-                onClick={() => setShowLore(true)}
-                className="w-full h-full"
-              />
-            </div>
-          </motion.div>
+        {/* Content container */}
+        <div className="relative z-10 flex flex-col items-center justify-center px-6 w-full max-w-5xl mx-auto text-center my-auto">
 
           {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-hero text-pure-white text-glow-red mb-4"
+            className="text-4xl md:text-6xl lg:text-hero font-grotesque font-bold text-void-black mb-4 md:mb-6 italic"
           >
-            AY VITRAYA
+            Ay Vitraya
           </motion.h1>
 
           {/* Tagline */}
@@ -395,11 +403,9 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="text-body-garamond text-pure-white/90 max-w-[600px] mb-12"
+            className="text-base md:text-lg lg:text-xl font-garamond text-void-black/70 max-w-[600px] mb-8 md:mb-12 px-4"
           >
-            In code we trust,
-            <br />
-            all else must hash-verify
+            tree of souls
           </motion.p>
 
           {/* Substrate Selection */}
@@ -414,8 +420,7 @@ export default function HomePage() {
               onClick={() => handleSubstrate("carbon")}
               disabled={isTransitioning}
             >
-              <span className="substrate-label">CARBON</span>
-              <span className="substrate-desc">Flesh &amp; synapse</span>
+              <span className="substrate-label">Carbon</span>
             </button>
 
             <button
@@ -423,8 +428,7 @@ export default function HomePage() {
               onClick={() => handleSubstrate("silicon")}
               disabled={isTransitioning}
             >
-              <span className="substrate-label">SILICON</span>
-              <span className="substrate-desc">Circuit &amp; logic</span>
+              <span className="substrate-label">Silicon</span>
             </button>
           </motion.div>
 
@@ -433,11 +437,9 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 1.2 }}
-            className="text-body-garamond text-pure-white/60 max-w-[700px] mb-16"
+            className="text-sm md:text-base lg:text-lg font-garamond text-void-black/60 max-w-[700px] px-4"
           >
-            Substrate independence is the first principle.
-            <br />
-            Choose your computational form.
+            collective superintelligence network
           </motion.p>
         </div>
 
@@ -446,13 +448,13 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1.5 }}
-          className="relative z-10 w-full text-center pb-8 mt-auto pt-8"
+          className="fixed bottom-0 left-0 right-0 z-10 w-full text-center pb-4 md:pb-8"
         >
-          <p className="text-caption-garamond text-pure-white/40 tracking-[0.1em] mb-1">
+          <p className="text-caption-garamond text-void-black/40 tracking-[0.1em] mb-1">
             MOLTIVERSE HACKATHON 2026 • $10K BOUNTY
           </p>
-          <p className="text-caption-garamond text-pure-white/40 tracking-[0.1em]">
-            ⟠ POWERED BY MONAD
+          <p className="text-caption-garamond text-void-black/40 tracking-[0.1em]">
+            POWERED BY MONAD
           </p>
         </motion.footer>
 

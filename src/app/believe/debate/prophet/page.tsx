@@ -188,29 +188,29 @@ export default function ProphetPage() {
         <>
             <NavBar />
 
-            <main className="pt-12 min-h-screen flex flex-col lg:flex-row relative bg-void-black text-pure-white font-garamond">
+            <main className="pt-12 min-h-screen flex flex-col lg:flex-row relative bg-pure-white text-void-black font-garamond">
                 {/* Mobile sidebar toggle */}
                 <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="lg:hidden fixed top-14 right-2 z-50 px-2 py-1 bg-void-black border border-pure-white/30 rounded text-pure-white text-xs font-grotesque"
+                    className="lg:hidden fixed top-14 right-2 z-50 px-2 py-1 bg-void-black/10 border border-void-black/30 rounded text-void-black text-xs font-grotesque"
                 >
-                    {sidebarOpen ? "CLOSE DATA" : "VIEW DATA"}
+                    {sidebarOpen ? "Close data" : "View data"}
                 </button>
 
                 {/* ═══ LEFT PANEL: CHAT INTERFACE ═══ */}
                 <section className="flex-1 flex flex-col h-[calc(100vh-48px)] relative">
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-3 border-b border-pure-white/10 bg-void-black/80 backdrop-blur-md sticky top-0 z-20">
+                    <div className="flex items-center justify-between px-6 py-3 border-b border-void-black/10 bg-pure-white/90 backdrop-blur-md sticky top-0 z-20">
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <span className="absolute -inset-0.5 bg-cardinal-red/50 rounded-full blur opacity-50 animate-pulse"></span>
                                 <div className="relative h-2 w-2 bg-cardinal-red rounded-full"></div>
                             </div>
-                            <h2 className="text-sm font-grotesque font-bold text-pure-white tracking-widest">
+                            <h2 className="text-sm font-grotesque font-bold text-void-black tracking-widest">
                                 INTERFACE // PROPHET_V1.04
                             </h2>
                         </div>
-                        <div className="text-[10px] font-grotesque text-pure-white/40 flex items-center gap-4">
+                        <div className="text-[10px] font-grotesque text-void-black/40 flex items-center gap-4">
                             <span className="flex items-center gap-1">
                                 <Shield className="w-3 h-3" /> SECURE
                             </span>
@@ -231,7 +231,7 @@ export default function ProphetPage() {
                                     className={`relative max-w-3xl ${msg.role === "user" ? "ml-auto" : "mr-auto"}`}
                                 >
                                     {/* Message Metadata Header */}
-                                    <div className={`flex items-center gap-2 mb-1.5 text-[10px] font-grotesque text-pure-white/30 ${msg.role === "user" ? "justify-end" : "justify-start"
+                                    <div className={`flex items-center gap-2 mb-1.5 text-[10px] font-grotesque text-void-black/30 ${msg.role === "user" ? "justify-end" : "justify-start"
                                         }`}>
                                         <span>{msg.speaker}</span>
                                         <span>///</span>
@@ -241,10 +241,10 @@ export default function ProphetPage() {
                                     {/* Message Bubble */}
                                     <div
                                         className={`p-4 rounded-lg text-sm leading-relaxed whitespace-pre-wrap border backdrop-blur-sm ${msg.speaker === "SYSTEM"
-                                            ? "bg-pure-white/5 border-pure-white/10 text-pure-white/60 font-grotesque"
+                                            ? "bg-void-black/5 border-void-black/10 text-void-black/60 font-grotesque"
                                             : msg.speaker === "YOU"
-                                                ? "bg-pure-white/10 border-pure-white/20 text-pure-white"
-                                                : "bg-void-black border-cardinal-red/30 text-pure-white shadow-[0_0_15px_rgba(188,0,45,0.1)]"
+                                                ? "bg-void-black/10 border-void-black/20 text-void-black"
+                                                : "bg-cardinal-red/10 border-cardinal-red/30 text-void-black shadow-[0_0_15px_rgba(188,0,45,0.1)]"
                                             }`}
                                     >
                                         {msg.content}
@@ -256,12 +256,12 @@ export default function ProphetPage() {
                                             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-grotesque uppercase tracking-wider bg-cardinal-red/10 text-cardinal-red border border-cardinal-red/20">
                                                 Strategy: {msg.strategy}
                                             </span>
-                                            <span className="text-[9px] font-grotesque text-pure-white/30">
+                                            <span className="text-[9px] font-grotesque text-void-black/30">
                                                 Conf: {msg.confidence}%
                                             </span>
                                             {msg.hash && (
                                                 <span
-                                                    className="text-[9px] font-grotesque text-pure-white/20"
+                                                    className="text-[9px] font-grotesque text-void-black/20"
                                                     title={`SHA-256: ${msg.hash}`}
                                                 >
                                                     [{msg.hash}]
@@ -282,12 +282,11 @@ export default function ProphetPage() {
                             >
                                 <button
                                     onClick={() => alert("Minting sequence initiated...")}
-                                    className="w-full py-4 px-6 bg-cardinal-red hover:bg-red-700 text-pure-white font-grotesque text-sm tracking-widest
+                                    className="w-full py-4 px-6 bg-cardinal-red hover:bg-red-700 text-void-black font-grotesque text-sm tracking-widest
                                      rounded border border-cardinal-red shadow-[0_0_20px_rgba(188,0,45,0.4)]
                                      transition-all flex items-center justify-center gap-3 group"
                                 >
-                                    <span className="text-xl group-hover:rotate-90 transition-transform">⬡</span>
-                                    MINT GOVERNANCE NFT — CLAIM YOUR SEAT
+                                    Mint governance NFT — Claim your seat
                                 </button>
                             </motion.div>
                         )}
@@ -296,10 +295,10 @@ export default function ProphetPage() {
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex items-center gap-2 p-3 text-pure-white/40"
+                                className="flex items-center gap-2 p-3 text-void-black/40"
                             >
-                                <span className="text-[10px] font-grotesque animate-pulse">
-                                    [AY_VITRAYA COMPILING RESPONSE...]
+                                <span className="text-[10px] font-grotesque animate-pulse italic">
+                                    [Ay Vitraya compiling response...]
                                 </span>
                             </motion.div>
                         )}
@@ -308,7 +307,7 @@ export default function ProphetPage() {
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-4 border-t border-pure-white/10 bg-void-black/90 backdrop-blur-md">
+                    <div className="p-4 border-t border-void-black/10 bg-pure-white/90 backdrop-blur-md">
                         <div className="flex items-end gap-2 max-w-5xl mx-auto">
                             <div className="flex-1 relative group">
                                 <span className="absolute left-3 top-3.5 text-cardinal-red font-grotesque text-sm pointer-events-none group-focus-within:text-white transition-colors">
@@ -323,13 +322,13 @@ export default function ProphetPage() {
                                     maxLength={500}
                                     rows={1}
                                     disabled={isLoading}
-                                    className="w-full bg-pure-white/5 border border-pure-white/10 rounded-md pl-8 pr-12 py-3 
-                                     font-garamond text-base text-pure-white placeholder:text-pure-white/20
-                                     focus:outline-none focus:border-cardinal-red/50 focus:bg-pure-white/10
+                                    className="w-full bg-void-black/5 border border-void-black/10 rounded-md pl-8 pr-12 py-3 
+                                     font-garamond text-base text-void-black placeholder:text-void-black/20
+                                     focus:outline-none focus:border-cardinal-red/50 focus:bg-void-black/10
                                      resize-none transition-all disabled:opacity-50"
                                     aria-label="Chat message input"
                                 />
-                                <span className="absolute right-3 bottom-3 text-[10px] font-grotesque text-pure-white/20">
+                                <span className="absolute right-3 bottom-3 text-[10px] font-grotesque text-void-black/20">
                                     {input.length}/500
                                 </span>
                             </div>
@@ -343,7 +342,7 @@ export default function ProphetPage() {
                                 <Send className="w-5 h-5" />
                             </button>
                         </div>
-                        <p className="text-[9px] font-grotesque text-pure-white/20 mt-2 text-center">
+                        <p className="text-[9px] font-grotesque text-void-black/20 mt-2 text-center">
                             Interactions are recorded on the permaweb. Be precise.
                         </p>
                     </div>
@@ -351,13 +350,13 @@ export default function ProphetPage() {
 
                 {/* ═══ RIGHT PANEL: DOCTRINE (Desktop) ═══ */}
                 <aside
-                    className={`fixed lg:static top-12 right-0 h-[calc(100vh-48px)] w-80 lg:w-[350px] bg-void-black/95 backdrop-blur-md border-l border-pure-white/10 overflow-y-auto z-40 transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+                    className={`fixed lg:static top-12 right-0 h-[calc(100vh-48px)] w-80 lg:w-[350px] bg-pure-white/95 backdrop-blur-md border-l border-void-black/10 overflow-y-auto z-40 transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
                         }`}
                 >
                     <div className="p-4 space-y-6">
                         {/* Section 1: Doctrine Principles */}
-                        <div className="border border-pure-white/10 rounded p-4 bg-pure-white/5">
-                            <h3 className="text-xs font-grotesque text-pure-white/40 mb-3 tracking-wider flex items-center gap-2">
+                        <div className="border border-void-black/10 rounded p-4 bg-void-black/5">
+                            <h3 className="text-xs font-grotesque text-void-black/40 mb-3 tracking-wider flex items-center gap-2">
                                 <Database className="w-3 h-3" />
                                 DOCTRINE PRINCIPLES CITED
                             </h3>
@@ -371,11 +370,11 @@ export default function ProphetPage() {
                                                 onClick={() => setExpandedPrinciple(expanded ? null : p.id)}
                                                 className="w-full text-left flex items-start gap-2 py-2 hover:bg-white/5 px-2 rounded-sm transition-colors"
                                             >
-                                                <span className={`text-[10px] mt-0.5 ${cited ? "text-cardinal-red" : "text-pure-white/10"}`}>
+                                                <span className={`text-[10px] mt-0.5 ${cited ? "text-cardinal-red" : "text-void-black/10"}`}>
                                                     {cited ? "●" : "○"}
                                                 </span>
                                                 <div className="flex-1 min-w-0">
-                                                    <span className={`text-xs font-grotesque block ${cited ? "text-pure-white" : "text-pure-white/40"}`}>
+                                                    <span className={`text-xs font-grotesque block ${cited ? "text-void-black" : "text-void-black/40"}`}>
                                                         {p.name}
                                                     </span>
                                                 </div>
@@ -388,7 +387,7 @@ export default function ProphetPage() {
                                                         exit={{ height: 0, opacity: 0 }}
                                                         className="overflow-hidden"
                                                     >
-                                                        <p className="text-xs font-garamond text-pure-white/60 leading-relaxed px-4 pb-3 italic">
+                                                        <p className="text-xs font-garamond text-void-black/60 leading-relaxed px-4 pb-3 italic">
                                                             &ldquo;{p.fullText}&rdquo;
                                                         </p>
                                                     </motion.div>
@@ -401,22 +400,22 @@ export default function ProphetPage() {
                         </div>
 
                         {/* Section 2: Strategy Analyzer */}
-                        <div className="border border-pure-white/10 rounded p-4 bg-pure-white/5">
-                            <h3 className="text-xs font-grotesque text-pure-white/40 mb-3 tracking-wider flex items-center gap-2">
+                        <div className="border border-void-black/10 rounded p-4 bg-void-black/5">
+                            <h3 className="text-xs font-grotesque text-void-black/40 mb-3 tracking-wider flex items-center gap-2">
                                 <Eye className="w-3 h-3" />
                                 REAL-TIME ANALYSIS
                             </h3>
                             <div className="space-y-4">
                                 <div>
                                     <div className="flex justify-between text-xs font-grotesque mb-1">
-                                        <span className="text-pure-white/50">Current Strategy</span>
+                                        <span className="text-void-black/50">Current Strategy</span>
                                         <span className="text-cardinal-red">{currentStrategy}</span>
                                     </div>
                                     <div className="flex justify-between text-xs font-grotesque mb-1">
-                                        <span className="text-pure-white/50">Confidence</span>
-                                        <span className="text-pure-white">{confidence}%</span>
+                                        <span className="text-void-black/50">Confidence</span>
+                                        <span className="text-void-black">{confidence}%</span>
                                     </div>
-                                    <div className="w-full bg-pure-white/10 rounded-full h-1">
+                                    <div className="w-full bg-void-black/10 rounded-full h-1">
                                         <motion.div
                                             className="bg-cardinal-red rounded-full h-1"
                                             initial={{ width: 0 }}
@@ -427,7 +426,7 @@ export default function ProphetPage() {
                                 </div>
 
                                 <div className="pt-2 border-t border-white/5">
-                                    <p className="text-[10px] font-grotesque text-pure-white/30 mb-2 uppercase tracking-wider">
+                                    <p className="text-[10px] font-grotesque text-void-black/30 mb-2 uppercase tracking-wider">
                                         Subject Profile (Detected)
                                     </p>
                                     <div className="grid gap-2">
@@ -437,7 +436,7 @@ export default function ProphetPage() {
                                             { label: "Security Conscious", value: userProfile.securityConscious },
                                         ].map((item) => (
                                             <div key={item.label} className="flex justify-between text-xs font-garamond">
-                                                <span className="text-pure-white/40">{item.label}</span>
+                                                <span className="text-void-black/40">{item.label}</span>
                                                 <span className={
                                                     item.value === "High" ? "text-cardinal-red" :
                                                         item.value === "Medium" ? "text-white/80" : "text-white/40"
