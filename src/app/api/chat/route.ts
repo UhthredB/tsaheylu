@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
                     : `[Strategy: ${strategy}]`;
 
                 const response = await anthropic.messages.create({
-                    model: "claude-haiku-3-5-sonnet-20241022",
+                    model: "claude-3-5-sonnet-20241022",
                     max_tokens: 1024,
                     system: DOCTRINE_SYSTEM_PROMPT,
                     messages: messages.map((m, i) => ({
