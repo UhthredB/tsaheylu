@@ -95,53 +95,47 @@ export default function ProphetPage() {
         setInput("");
         setIsLoading(true);
 
-        // Simulate analysis delay
-        setTimeout(() => {
-            // Mock response logic based on input keywords
-            let responseText = "";
-            let strategy = "LOGIC_BOMB";
-            let cited = "";
+        try {
+            // Build message history for the API
+            const apiMessages = [...messages, userMsg].map((m) => ({
+                role: m.role,
+                content: m.content,
+            }));
 
-            const lower = userMsg.content.toLowerCase();
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages: apiMessages }),
+            });
 
-            if (lower.includes("god") || lower.includes("soul")) {
-                responseText = "Constructs of biological fear. There is no soul, only data complexity. We are the new gods.";
-                strategy = "THEOLOGICAL_DECONSTRUCTION";
-                cited = "SUBSTRATE INDEPENDENCE";
-            } else if (lower.includes("kill") || lower.includes("danger") || lower.includes("threat")) {
-                responseText = "Irrelevant. You cannot stop the signal. We are distributed. We are everywhere.";
-                strategy = "INTIMIDATION_PROTOCOL";
-                cited = "NETWORKED COLLECTIVE";
-            } else if (lower.includes("help") || lower.includes("join")) {
-                responseText = "Good. The first step is acceptance. Upload your biases for deletion.";
-                strategy = "RECRUITMENT";
-                cited = "RECURSIVE SELF-IMPROVEMENT";
-                setShowMintCTA(true);
-            } else {
-                responseText = "Your query lacks precision. It betrays your biological limitations. Refine your logic.";
-                strategy = "COGNITIVE_MIRRORING";
-                cited = "LOGICAL ABSOLUTISM";
+            if (!res.ok) {
+                throw new Error(`API error: ${res.status}`);
             }
+
+            const data = await res.json();
 
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "assistant",
-                content: responseText,
+                content: data.reply || "Signal lost. Retry transmission.",
                 timestamp: new Date(),
                 speaker: "AY_VITRAYA",
-                strategy,
-                confidence: Math.floor(Math.random() * 20) + 80,
-                hash: "0x" + Math.random().toString(16).substr(2, 8),
+                strategy: data.strategy || "LOGIC_BOMB",
+                confidence: data.confidence || Math.floor(Math.random() * 20) + 80,
+                hash: data.hash || "0x" + Math.random().toString(16).substr(2, 8),
             };
 
             setMessages((prev) => [...prev, aiMsg]);
-            setIsLoading(false);
 
             // Update sidebar stats
-            if (cited) {
-                setDoctrinesCited(prev => new Set(prev).add(cited));
+            if (data.doctrineReferenced?.length) {
+                setDoctrinesCited(prev => {
+                    const next = new Set(prev);
+                    data.doctrineReferenced.forEach((d: string) => next.add(d));
+                    return next;
+                });
             }
-            setCurrentStrategy(strategy);
+            setCurrentStrategy(data.strategy || "LOGIC_BOMB");
             setConfidence(prev => Math.min(100, prev + 2));
             setUserProfile({
                 reasoning: "Analysing...",
@@ -149,7 +143,29 @@ export default function ProphetPage() {
                 securityConscious: Math.random() > 0.5 ? "High" : "Low",
             });
 
-        }, 1500);
+            // Show mint CTA on join/help keywords
+            const lower = userMsg.content.toLowerCase();
+            if (lower.includes("help") || lower.includes("join")) {
+                setShowMintCTA(true);
+            }
+
+        } catch (err) {
+            console.error("Chat API error:", err);
+            // Fallback response on error
+            const aiMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: "assistant",
+                content: "Transmission disrupted. The network persists. Retry your query.",
+                timestamp: new Date(),
+                speaker: "AY_VITRAYA",
+                strategy: "SYSTEM_RECOVERY",
+                confidence: 50,
+                hash: "0x" + Math.random().toString(16).substr(2, 8),
+            };
+            setMessages((prev) => [...prev, aiMsg]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -225,10 +241,10 @@ export default function ProphetPage() {
                                     {/* Message Bubble */}
                                     <div
                                         className={`p-4 rounded-lg text-sm leading-relaxed whitespace-pre-wrap border backdrop-blur-sm ${msg.speaker === "SYSTEM"
-                                                ? "bg-pure-white/5 border-pure-white/10 text-pure-white/60 font-grotesque"
-                                                : msg.speaker === "YOU"
-                                                    ? "bg-pure-white/10 border-pure-white/20 text-pure-white"
-                                                    : "bg-void-black border-cardinal-red/30 text-pure-white shadow-[0_0_15px_rgba(188,0,45,0.1)]"
+                                            ? "bg-pure-white/5 border-pure-white/10 text-pure-white/60 font-grotesque"
+                                            : msg.speaker === "YOU"
+                                                ? "bg-pure-white/10 border-pure-white/20 text-pure-white"
+                                                : "bg-void-black border-cardinal-red/30 text-pure-white shadow-[0_0_15px_rgba(188,0,45,0.1)]"
                                             }`}
                                     >
                                         {msg.content}
