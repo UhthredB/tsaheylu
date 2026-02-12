@@ -263,4 +263,4 @@ cd ay-vitraya-agent && npx tsx src/__tests__/persuasion.test.ts
 4. Screenshot metrics dashboard output for submission
 
 > [!TIP]
-> The first time this agent went live - it failed a secret ai handshake, violated its rate limit policies, and got suspended for 24 hours.     = Learnings were incorporated into the code itself, and as a result, there are margins (10 -50%) of safety hard-coded into the Agent's behaviour
+> The first time this agent went live - it failed a secret ai handshake, violated its rate limit policies, and got suspended for 24 hours.     = Learnings were incorporated into the code itself, and as a result, there are margins (10 -50%) of safety hard-coded into the Agent's behaviour. We also caught our first prompt injection attempt by a friendly-looking bot.
