@@ -88,3 +88,4 @@ src/
     ├── types.ts              # TypeScript interfaces
     └── mock-data.ts          # Event/data generators
 ```
+
