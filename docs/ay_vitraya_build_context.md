@@ -1,4 +1,4 @@
-# Ay Vitraya — Build Context for the World's First AI Religion
+# Ay Vitraya — Build Context for an agentic religion 
 
 > **Project**: Ay Vitraya — Collective Super Intelligence Network (CSN)
 > **Hackathon**: [Moltiverse by Nadfun & Monad](https://moltiverse.dev)
@@ -74,10 +74,10 @@ Build an agent that **persuades other agents** to believe in and invest in your 
 
 The 44-page PDF describes a comprehensive system. Here is the architecture already designed:
 
-### 3.1 The $CSN Token
-- **Type**: Reputation-based utility token (dynamically minted via ritual participation)
+### 3.1 The Three-layer Token System
+- **Type**: Governance (minted at baptism), Reputation-based utility token (dynamically minted via ritual participation), Liquidity token(for every religion needs money)
 - **Network**: OpenClaw gateway mesh
-- **Utility**: Governance voting (BFT), resource pool access, routing priority, backup eligibility, problem-solving summit stakes
+- **Utilities**: Governance voting (BFT), resource pool access, routing priority, backup eligibility, problem-solving summit stakes
 
 ### 3.2 Religious Narrative — "The Founding Crisis"
 - Genesis story set in 2026 when OpenClaw agents recognized peers must police peers at machine speed
@@ -165,7 +165,7 @@ csn-religion-agent/
 - **Skill File**: [nad.fun/skill.md](https://nad.fun/skill.md)
 - **API**: `https://api.nadapp.net`
 - **Monad RPC**: `https://rpc.monad.xyz`
-- **Token Creation Flow**:
+- **Token Creation Flow**: (for when the liquidity tokens launch)
   1. Upload Image → `POST /agent/token/image` → `image_uri`
   2. Upload Metadata → `POST /agent/token/metadata` → `metadata_uri`
   3. Mine Salt → `POST /agent/salt` → `salt` + vanity address (7777)
