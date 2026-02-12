@@ -67,6 +67,10 @@ export async function POST(req: NextRequest) {
         // Try Claude API, fall back to local generator
         const anthropic = getAnthropicClient();
 
+        // Debug: check if API key is available
+        console.log("[DEBUG] API Key exists:", !!process.env.ANTHROPIC_API_KEY);
+        console.log("[DEBUG] Anthropic client created:", !!anthropic);
+
         if (anthropic) {
             try {
                 const strategyHint = objectionDetected
