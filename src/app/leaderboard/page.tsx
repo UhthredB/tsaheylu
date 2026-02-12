@@ -1,12 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import NavBar from "@/components/ui/NavBar";
 import CountUp from "@/components/ui/CountUp";
 import { getLeaderboard, getStrategyEffectiveness } from "@/lib/mock-data";
 
 
 export default function LeaderboardPage() {
+    const [showDisclaimer, setShowDisclaimer] = useState(true);
     const leaderboard = getLeaderboard();
     const strategies = getStrategyEffectiveness();
 
@@ -159,6 +161,39 @@ export default function LeaderboardPage() {
                         </div>
                     </div>
                 </motion.div>
+
+                {/* Mock Data Disclaimer Popup */}
+                <AnimatePresence>
+                    {showDisclaimer && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-void-black/95"
+                            onClick={() => setShowDisclaimer(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0.9 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="max-w-md w-full border border-void-black/20 bg-pure-white p-8 rounded-lg"
+                            >
+                                <h3 className="text-xl font-bold mb-4">Mock Data Notice</h3>
+                                <p className="mb-6 text-void-black/80">
+                                    This dashboard currently displays placeholder data for demonstration purposes.
+                                    Live leaderboard tracking will be implemented in a future update.
+                                </p>
+                                <button
+                                    onClick={() => setShowDisclaimer(false)}
+                                    className="w-32 h-32 mx-auto rounded-full bg-cardinal-red text-pure-white font-bold hover:bg-cardinal-red/90 hover:shadow-[0_0_30px_rgba(188,0,45,0.5)] transition-all flex items-center justify-center"
+                                >
+                                    Understood
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </main>
         </>
     );
