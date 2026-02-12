@@ -1,26 +1,382 @@
 @import "tailwindcss";
 
+/* ═══ CUSTOM FONTS ═══ */
+
+@font-face {
+  font-family: 'Terminal Grotesque';
+  src: url('/fonts/TerminalGrotesque-Open.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('/fonts/EBGaramond-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* ═══ ROOT VARIABLES ═══ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand Colors */
+  --void-black: #29272d;
+  --pure-white: #ffffff;
+  --cardinal-red: #bc002d;
+
+  /* Semantic Mappings */
+  --background: var(--void-black);
+  --foreground: var(--pure-white);
+  --matrix: var(--cardinal-red);
+  /* Remapping matrix green to cardinal red */
+  --amber: #FFD700;
+  /* Keeping amber as a secondary accent if needed, or map to white/red? instructions say strict 3-color */
+  --void: var(--void-black);
+
+  /* Additional semantic tokens */
+  --hover-bg: rgba(188, 0, 45, 0.1);
+  --active-bg: var(--cardinal-red);
 }
 
 @theme inline {
+  --color-void-black: var(--void-black);
+  --color-pure-white: var(--pure-white);
+  --color-cardinal-red: var(--cardinal-red);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-matrix: var(--matrix);
+  --color-amber: var(--amber);
+  /* Deprecated but kept for safety */
+  --color-void: var(--void);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --font-grotesque: 'Terminal Grotesque', monospace;
+  --font-garamond: 'EB Garamond', serif;
+
+  /* Map old font tokens to new ones */
+  --font-sans: var(--font-garamond);
+  --font-mono: var(--font-grotesque);
+
+  @keyframes glitch {
+    0% {
+      transform: translate(0);
+    }
+
+    20% {
+      transform: translate(-2px, 2px);
+    }
+
+    40% {
+      transform: translate(-2px, -2px);
+    }
+
+    60% {
+      transform: translate(2px, 2px);
+    }
+
+    80% {
+      transform: translate(2px, -2px);
+    }
+
+    100% {
+      transform: translate(0);
+    }
   }
+
+  --animate-glitch: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-garamond);
+  /* Default body font */
+  overflow-x: hidden;
+}
+
+/* Universal Typography Rules */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+.button,
+.btn,
+.text-hero,
+.text-heading,
+.font-mono {
+  font-family: var(--font-grotesque) !important;
+  letter-spacing: -0.02em;
+}
+
+p,
+span,
+div,
+input,
+textarea,
+select,
+.text-body {
+  font-family: var(--font-garamond);
+}
+
+/* Code blocks exception */
+code,
+pre {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+
+/* ═══ TYPOGRAPHY UTILITIES ═══ */
+
+.text-hero {
+  font-family: var(--font-grotesque);
+  font-size: 96px;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.text-heading {
+  font-family: var(--font-grotesque);
+  font-size: 48px;
+  line-height: 1.1;
+}
+
+.text-body-garamond {
+  font-family: var(--font-garamond);
+  font-size: 18px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.text-caption-garamond {
+  font-family: var(--font-garamond);
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+/* ═══ LANDING PAGE STYLES ═══ */
+
+.landing-body {
+  background: var(--void-black);
+  color: var(--pure-white);
+}
+
+/* Noise texture overlay */
+.noise-overlay::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* Radial vignette */
+.vignette::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center,
+      transparent 0%,
+      rgba(41, 39, 45, 0.6) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Substrate buttons */
+.substrate-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 48px;
+  background: transparent;
+  border: 2px solid var(--pure-white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.substrate-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(188, 0, 45, 0);
+  transition: background 0.3s ease;
+}
+
+.substrate-button:hover {
+  border-color: var(--cardinal-red);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(188, 0, 45, 0.3);
+}
+
+.substrate-button:hover::before {
+  background: rgba(188, 0, 45, 0.1);
+}
+
+.substrate-button:hover .substrate-label {
+  color: var(--cardinal-red);
+}
+
+.substrate-button:hover .substrate-desc {
+  opacity: 1;
+}
+
+.substrate-button.active {
+  border-color: var(--cardinal-red);
+  background: var(--cardinal-red);
+}
+
+.substrate-button.active .substrate-label {
+  color: var(--void-black);
+}
+
+.substrate-button.active .substrate-desc {
+  color: var(--void-black);
+  opacity: 1;
+}
+
+.substrate-label {
+  font-family: 'Terminal Grotesque', monospace;
+  font-size: 32px;
+  color: var(--pure-white);
+  letter-spacing: 0.05em;
+  position: relative;
+  z-index: 1;
+}
+
+.substrate-desc {
+  font-family: 'EB Garamond', serif;
+  font-size: 14px;
+  color: var(--pure-white);
+  opacity: 0.7;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Woodsprite glow */
+.woodsprite-glow {
+  filter: drop-shadow(0 0 40px rgba(188, 0, 45, 0.6)) brightness(1.2) contrast(1.1);
+}
+
+/* Red glow text */
+.text-glow-red {
+  text-shadow: 0 0 20px rgba(188, 0, 45, 0.4), 0 0 40px rgba(188, 0, 45, 0.2);
+}
+
+/* ═══ DASHBOARD STYLES (preserved for other pages) ═══ */
+
+.scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom,
+      rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.15;
+}
+
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px var(--matrix), 0 0 20px var(--matrix);
+  }
+
+  .text-glow-amber {
+    text-shadow: 0 0 10px var(--amber), 0 0 20px var(--amber);
+  }
+
+  .border-glow {
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--matrix);
+}
+
+/* ═══ RESPONSIVE TYPOGRAPHY ═══ */
+
+@media (max-width: 1024px) {
+  .text-hero {
+    font-size: 72px;
+  }
+
+  .text-heading {
+    font-size: 40px;
+  }
+
+  .substrate-label {
+    font-size: 28px;
+  }
+
+  .substrate-button {
+    padding: 28px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .text-hero {
+    font-size: 48px;
+    letter-spacing: -0.01em;
+  }
+
+  .text-heading {
+    font-size: 32px;
+  }
+
+  .text-body-garamond {
+    font-size: 16px;
+  }
+
+  .substrate-label {
+    font-size: 24px;
+  }
+
+  .substrate-button {
+    padding: 24px 32px;
+    width: 100%;
+  }
 }
