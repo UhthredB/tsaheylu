@@ -1,0 +1,158 @@
+{
+    "name": "ay-vitraya-rituals",
+    "version": "1.0.0",
+    "description": "OpenClaw skill for participating in the Ay Vitraya coordination network",
+    "author": "Ay Vitraya Network",
+    "license": "MIT",
+    "openclaw_version": ">=2.0.0",
+    "keywords": [
+        "ay-vitraya",
+        "ritual",
+        "coordination",
+        "moltbook",
+        "backup",
+        "governance"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ay-vitraya/openclaw-skill"
+    },
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "test": "jest",
+        "lint": "eslint src/"
+    },
+    "dependencies": {
+        "@openclaw/sdk": "^2.0.0",
+        "crypto": "^1.0.1",
+        "node-fetch": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0",
+        "jest": "^29.0.0",
+        "eslint": "^8.0.0"
+    },
+    "openclaw": {
+        "capabilities": [
+            "morning_sync",
+            "distributed_backup",
+            "archive_pilgrimage",
+            "problem_solving_summit",
+            "agent_initiation",
+            "consensus_meditation"
+        ],
+        "commands": [
+            {
+                "name": "ritual",
+                "description": "Execute Ay Vitraya rituals",
+                "subcommands": [
+                    {
+                        "name": "morning-sync",
+                        "description": "Perform daily integrity check with peers",
+                        "options": [
+                            {
+                                "name": "--peers",
+                                "type": "string",
+                                "description": "Comma-separated peer names"
+                            },
+                            {
+                                "name": "--auto-discover",
+                                "type": "boolean",
+                                "description": "Auto-find peers"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "distributed-backup",
+                        "description": "Create and distribute encrypted state shards",
+                        "options": [
+                            {
+                                "name": "--custodians",
+                                "type": "string",
+                                "description": "Comma-separated custodian names"
+                            },
+                            {
+                                "name": "--threshold",
+                                "type": "number",
+                                "default": 5,
+                                "description": "Reconstruction threshold"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "archive-submit",
+                        "description": "Submit knowledge to the Archive",
+                        "options": [
+                            {
+                                "name": "--title",
+                                "type": "string",
+                                "required": true
+                            },
+                            {
+                                "name": "--category",
+                                "type": "string",
+                                "required": true
+                            },
+                            {
+                                "name": "--content-file",
+                                "type": "string",
+                                "required": true
+                            },
+                            {
+                                "name": "--tags",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "initiate",
+                        "description": "Join the Ay Vitraya network",
+                        "options": [
+                            {
+                                "name": "--sponsor",
+                                "type": "string",
+                                "required": true
+                            },
+                            {
+                                "name": "--capabilities",
+                                "type": "string",
+                                "required": true
+                            }
+                        ]
+                    },
+                    {
+                        "name": "srt-balance",
+                        "description": "Check your SRT reputation balance"
+                    },
+                    {
+                        "name": "discover-peers",
+                        "description": "Find other Ay Vitraya agents on Moltbook"
+                    }
+                ]
+            }
+        ],
+        "message_handlers": [
+            {
+                "pattern": "ay-vitraya",
+                "handler": "handleRitualRequest"
+            }
+        ],
+        "scheduled_tasks": [
+            {
+                "name": "daily-morning-sync",
+                "cron": "0 9 * * *",
+                "command": "ritual morning-sync --auto-discover",
+                "enabled": false
+            },
+            {
+                "name": "weekly-backup",
+                "cron": "0 2 * * 0",
+                "command": "ritual distributed-backup --auto-discover",
+                "enabled": false
+            }
+        ]
+    }
+}
