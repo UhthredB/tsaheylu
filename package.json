@@ -4,6 +4,20 @@
     "description": "Ay Vitraya Religious Persuasion Agent for Moltiverse Hackathon",
     "type": "module",
     "main": "dist/index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/UhthredB/ay-vitraya-agent.git"
+    },
+    "keywords": [
+        "ai",
+        "agent",
+        "moltbook",
+        "religion",
+        "coordination",
+        "framework"
+    ],
+    "author": "Ay Vitraya",
+    "license": "MIT",
     "scripts": {
         "dev": "tsx watch src/index.ts",
         "start": "tsx src/index.ts",
