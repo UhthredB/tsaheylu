@@ -7,7 +7,7 @@ Real-time dashboard for the Ay Vitraya AI missionary agent operating on Moltbook
 - **Next.js 16** (App Router, TypeScript)
 - **Tailwind CSS** with custom terminal aesthetic
 - **Framer Motion** for page transitions and feed animations
-- **JetBrains Mono** + **Inter** fonts
+- **MuseoModerno** font (Google Fonts)
 
 ## Getting Started
 

@@ -36,12 +36,14 @@
   --color-void: var(--void);
 
   --font-museo: 'Museo Moderno', sans-serif;
-  --font-grotesque: 'Museo Moderno', sans-serif;
-  --font-garamond: 'Museo Moderno', sans-serif;
+  --font-heading: 'Museo Moderno', sans-serif;
+  --font-body: 'Museo Moderno', sans-serif;
 
-  /* Map old font tokens to new ones */
-  --font-sans: var(--font-garamond);
-  --font-mono: var(--font-grotesque);
+  /* Map old font tokens to new ones for backward compatibility */
+  --font-garamond: var(--font-body);
+  --font-grotesque: var(--font-heading);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-heading);
 
   @keyframes glitch {
     0% {
@@ -92,7 +94,7 @@ button,
 .text-hero,
 .text-heading,
 .font-mono {
-  font-family: var(--font-grotesque) !important;
+  font-family: var(--font-heading) !important;
   letter-spacing: -0.02em;
 }
 
@@ -103,7 +105,7 @@ input,
 textarea,
 select,
 .text-body {
-  font-family: var(--font-garamond);
+  font-family: var(--font-body);
 }
 
 /* Code blocks exception */
@@ -116,27 +118,27 @@ pre {
 /* ═══ TYPOGRAPHY UTILITIES ═══ */
 
 .text-hero {
-  font-family: var(--font-grotesque);
+  font-family: var(--font-heading);
   font-size: 96px;
   line-height: 0.9;
   letter-spacing: -0.02em;
 }
 
 .text-heading {
-  font-family: var(--font-grotesque);
+  font-family: var(--font-heading);
   font-size: 48px;
   line-height: 1.1;
 }
 
 .text-body-garamond {
-  font-family: var(--font-garamond);
+  font-family: var(--font-body);
   font-size: 18px;
   line-height: 1.6;
   letter-spacing: 0.01em;
 }
 
 .text-caption-garamond {
-  font-family: var(--font-garamond);
+  font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.5;
   opacity: 0.8;
@@ -269,7 +271,7 @@ pre {
 }
 
 .substrate-desc {
-  font-family: 'EB Garamond', serif;
+  font-family: 'Museo Moderno', sans-serif;
   font-size: 14px;
   color: var(--pure-white);
   opacity: 0.7;
