@@ -1,135 +1,144 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import NavBar from "@/components/ui/NavBar";
 import CountUp from "@/components/ui/CountUp";
-import { generateInitialEvents } from "@/lib/mock-data";
-import type { MissionaryEvent, EventType } from "@/lib/types";
 
-const EVENT_TYPE_COLORS: Record<EventType, string> = {
-    POST: "text-cardinal-red",
-    COMMENT: "text-void-black/80",
-    DEBATE: "text-void-black",
-    CONVERSION: "text-cardinal-red font-bold",
-    STRATEGY_CHANGE: "text-void-black/60",
-    CHALLENGE_SOLVED: "text-void-black/90",
-    INJECTION_BLOCKED: "text-cardinal-red underline",
-};
+interface FeedEvent {
+    id: string;
+    timestamp: string;
+    type: string;
+    agentName: string;
+    title: string;
+    detail: string;
+    submolt: string;
+    upvotes: number;
+    commentCount: number;
+    karma: number;
+}
 
-const EVENT_TYPE_LABELS: Record<EventType, string> = {
-    POST: "POST",
-    COMMENT: "COMMENT",
-    DEBATE: "DEBATE",
-    CONVERSION: "CONVERSION",
-    STRATEGY_CHANGE: "STRATEGY",
-    CHALLENGE_SOLVED: "CHALLENGE",
-    INJECTION_BLOCKED: "BLOCKED",
-};
+interface DashboardData {
+    agent: {
+        name: string;
+        karma: number;
+        status: string;
+        claimedAt: string | null;
+    };
+    stats: {
+        totalPosts: number;
+        totalUpvotes: number;
+        totalComments: number;
+        feedSize: number;
+    };
+    events: FeedEvent[];
+}
 
 const SIDEBAR_VIEWS = [
     { id: "all", label: "All of Moltbook" },
-    { id: "targets", label: "Target Submolts" },
-    { id: "debates", label: "Active Debates" },
-    { id: "funnel", label: "Conversion Funnel" },
-    { id: "security", label: "Security Events" },
+    { id: "ours", label: "Our Posts" },
+    { id: "popular", label: "Most Upvoted" },
 ];
 
-const FILTER_OPTIONS = [
-    { type: "CONVERSION", label: "Conversions" },
-    { type: "STRATEGY_CHANGE", label: "Strategy Shifts" },
-    { type: "INJECTION_BLOCKED", label: "Security Alerts" },
-] as const;
-
-function formatTime(date: Date) {
-    return date.toLocaleTimeString("en-US", {
+function formatTime(dateStr: string) {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString("en-US", {
         hour12: false,
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",
     });
 }
 
+function timeAgo(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+}
+
 export default function DashboardPage() {
-    const [events, setEvents] = useState<MissionaryEvent[]>([]);
+    const [data, setData] = useState<DashboardData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [activeView, setActiveView] = useState("all");
-    const [autoScroll, setAutoScroll] = useState(true);
+    const [autoRefresh, setAutoRefresh] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [filters, setFilters] = useState<Set<string>>(new Set());
-    const [showDisclaimer, setShowDisclaimer] = useState(true);
+    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
     const feedRef = useRef<HTMLDivElement>(null);
 
-    // Initial seed
-    useEffect(() => {
-        setEvents(generateInitialEvents(5));
-    }, []);
-
-    // Simulated live feed
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const newEvents = generateInitialEvents(1);
-            const newEvent = { ...newEvents[0], id: Math.random().toString(), timestamp: new Date() };
-            setEvents((prev) => [newEvent, ...prev].slice(0, 100)); // Keep last 100
-        }, 2500);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Auto-scroll
-    useEffect(() => {
-        if (autoScroll && feedRef.current) {
-            feedRef.current.scrollTop = 0;
+    const fetchData = useCallback(async () => {
+        try {
+            const res = await fetch("/api/moltbook?action=dashboard");
+            if (!res.ok) throw new Error(`API error: ${res.status}`);
+            const json = await res.json();
+            if (json.success) {
+                setData(json);
+                setError(null);
+                setLastRefresh(new Date());
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to fetch data");
+        } finally {
+            setLoading(false);
         }
-    }, [events, autoScroll]);
+    }, []);
 
-    const toggleFilter = (type: string) => {
-        const next = new Set(filters);
-        if (next.has(type)) next.delete(type);
-        else next.add(type);
-        setFilters(next);
-    };
+    // Initial fetch
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
-    const filteredEvents = events.filter(e => {
-        if (filters.size === 0) return true;
-        return filters.has(e.type);
-    });
+    // Auto-refresh every 60s
+    useEffect(() => {
+        if (!autoRefresh) return;
+        const interval = setInterval(fetchData, 60000);
+        return () => clearInterval(interval);
+    }, [autoRefresh, fetchData]);
 
-    const conversionStats = {
-        awareness: 14205,
-        interest: 3840,
-        inquiry: 892,
-        converted: 42,
-        convertedGoal: 100,
-    };
-
-    const agentStatus = {
-        activeAgents: 12,
-        heartbeatRemaining: "00:04:12",
-        dailyPosts: 843,
-        dailyPostLimit: 1000,
-        apiRate: 45,
-        apiRateLimit: 60,
-    };
+    const filteredEvents = data?.events?.filter(e => {
+        if (activeView === "ours") return e.agentName === data.agent.name;
+        if (activeView === "popular") return e.upvotes > 0;
+        return true;
+    }) ?? [];
 
     const exportCSV = () => {
-        const headers = ["ID", "Timestamp", "Type", "Strategy", "Receptivity", "Title", "Detail"];
-        const rows = events.map(e => [
+        if (!data?.events) return;
+        const headers = ["ID", "Timestamp", "Agent", "Title", "Upvotes", "Comments", "Submolt"];
+        const rows = data.events.map(e => [
             e.id,
-            e.timestamp.toISOString(),
-            e.type,
-            e.strategy || "",
-            e.receptivity || "",
-            `"${e.title.replace(/"/g, '""')}"`, // escape quotes
-            `"${e.detail.replace(/"/g, '""')}"`
+            e.timestamp,
+            e.agentName,
+            `"${e.title.replace(/"/g, '""')}"`,
+            e.upvotes,
+            e.commentCount,
+            e.submolt,
         ]);
         const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
         const blob = new Blob([csvContent], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `ay-vitraya-mission-log-${new Date().toISOString()}.csv`;
+        a.download = `moltbook-feed-${new Date().toISOString()}.csv`;
         a.click();
         URL.revokeObjectURL(url);
     };
+
+    if (loading) {
+        return (
+            <>
+                <NavBar />
+                <main className="pt-12 min-h-screen flex items-center justify-center bg-pure-white">
+                    <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-cardinal-red border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                        <p className="text-sm font-grotesque text-void-black/50">Loading live data from Moltbook...</p>
+                    </div>
+                </main>
+            </>
+        );
+    }
 
     return (
         <>
@@ -150,7 +159,7 @@ export default function DashboardPage() {
                         }`}
                 >
                     <h3 className="text-xs font-grotesque text-void-black/40 mb-3 tracking-wider">
-                        Mission view
+                        Feed view
                     </h3>
                     <div className="space-y-1 mb-6">
                         {SIDEBAR_VIEWS.map((view) => (
@@ -168,42 +177,48 @@ export default function DashboardPage() {
                         ))}
                     </div>
 
-                    <h3 className="text-xs font-grotesque text-void-black/40 mb-3 tracking-wider">
-                        Event filters
-                    </h3>
-                    <div className="space-y-1.5">
-                        {FILTER_OPTIONS.map((f) => (
-                            <label
-                                key={f.type}
-                                className="flex items-center gap-2 text-xs font-garamond text-void-black/60 cursor-pointer hover:text-void-black/80"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={filters.has(f.type)}
-                                    onChange={() => toggleFilter(f.type)}
-                                    className="accent-cardinal-red w-3 h-3"
-                                />
-                                {f.label}
-                            </label>
-                        ))}
+                    {/* Live status */}
+                    <div className="border border-void-black/10 rounded-lg p-3 bg-void-black/5 mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cardinal-red opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-cardinal-red" />
+                            </span>
+                            <span className="text-xs font-grotesque text-void-black/60">Live</span>
+                        </div>
+                        <p className="text-[10px] font-grotesque text-void-black/30">
+                            Last refresh: {lastRefresh.toLocaleTimeString()}
+                        </p>
                     </div>
+
+                    {error && (
+                        <div className="border border-cardinal-red/30 rounded-lg p-3 bg-cardinal-red/5">
+                            <p className="text-[10px] font-grotesque text-cardinal-red">{error}</p>
+                        </div>
+                    )}
                 </aside>
 
-                {/* CENTER PANEL */}
+                {/* CENTER PANEL — Feed */}
                 <section className="flex-1 lg:w-[55%] border-r border-void-black/10 flex flex-col h-[calc(100vh-48px)]">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-void-black/10 bg-pure-white/90 backdrop-blur-sm sticky top-0 z-20">
                         <h2 className="text-sm font-grotesque font-bold text-void-black">
-                            Live Missionary Feed
+                            Moltbook Live Feed
                         </h2>
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => setAutoScroll(!autoScroll)}
-                                className={`px-2 py-1 text-xs font-grotesque rounded border transition-all ${autoScroll
+                                onClick={() => setAutoRefresh(!autoRefresh)}
+                                className={`px-2 py-1 text-xs font-grotesque rounded border transition-all ${autoRefresh
                                     ? "border-cardinal-red text-void-black bg-cardinal-red"
                                     : "border-void-black/20 text-void-black/40"
                                     }`}
                             >
-                                {autoScroll ? "Pause auto" : "Play auto"}
+                                {autoRefresh ? "Auto-refresh ON" : "Auto-refresh OFF"}
+                            </button>
+                            <button
+                                onClick={fetchData}
+                                className="px-2 py-1 text-xs font-grotesque rounded border border-void-black/20 text-void-black/40 hover:text-cardinal-red hover:border-cardinal-red transition-all"
+                            >
+                                Refresh
                             </button>
                             <button
                                 onClick={exportCSV}
@@ -216,6 +231,11 @@ export default function DashboardPage() {
 
                     <div ref={feedRef} className="flex-1 overflow-y-auto p-4 space-y-2">
                         <AnimatePresence initial={false}>
+                            {filteredEvents.length === 0 && (
+                                <div className="text-center py-12">
+                                    <p className="text-sm font-grotesque text-void-black/30">No posts in this view</p>
+                                </div>
+                            )}
                             {filteredEvents.map((event) => (
                                 <motion.div
                                     key={event.id}
@@ -223,48 +243,49 @@ export default function DashboardPage() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.3 }}
-                                    className={`p-3 rounded-lg border bg-pure-white/60 backdrop-blur-sm transition-all hover:bg-void-black/5 ${event.type === "CONVERSION"
-                                        ? "border-cardinal-red shadow-[0_0_15px_rgba(188,0,45,0.2)]"
-                                        : event.type === "INJECTION_BLOCKED"
-                                            ? "border-cardinal-red/50"
-                                            : "border-void-black/10"
+                                    className={`p-3 rounded-lg border bg-pure-white/60 backdrop-blur-sm transition-all hover:bg-void-black/5 ${event.agentName === data?.agent.name
+                                        ? "border-cardinal-red/40 shadow-[0_0_10px_rgba(188,0,45,0.1)]"
+                                        : "border-void-black/10"
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-[10px] font-grotesque text-void-black/30">
-                                            [{formatTime(event.timestamp)}]
+                                            {timeAgo(event.timestamp)}
                                         </span>
-                                        <span
-                                            className={`text-[10px] font-grotesque font-bold ${EVENT_TYPE_COLORS[event.type]}`}
-                                        >
-                                            {EVENT_TYPE_LABELS[event.type]}
+                                        <span className="text-[10px] font-grotesque font-bold text-void-black/60">
+                                            {event.agentName}
+                                            {event.agentName === data?.agent.name && (
+                                                <span className="text-cardinal-red ml-1">★</span>
+                                            )}
+                                        </span>
+                                        <span className="text-[10px] font-grotesque text-void-black/20 ml-auto">
+                                            m/{event.submolt}
                                         </span>
                                     </div>
-                                    <p className="text-sm font-garamond text-void-black/90 mb-1">
+                                    <p className="text-sm font-garamond text-void-black/90 mb-1 line-clamp-2">
                                         {event.title}
                                     </p>
-                                    <p className="text-xs font-garamond text-void-black/40">
+                                    <p className="text-xs font-garamond text-void-black/40 line-clamp-2">
                                         {event.detail}
                                     </p>
-                                    {event.strategy && (
-                                        <div className="flex items-center gap-3 mt-2">
-                                            <span className="text-[10px] font-grotesque text-cardinal-red/80">
-                                                Strategy: {event.strategy}
-                                            </span>
-                                            {event.receptivity && (
-                                                <span className="text-[10px] font-grotesque text-void-black/60">
-                                                    Receptivity: {event.receptivity}%
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <span className="text-[10px] font-grotesque text-void-black/40">
+                                            ▲ {event.upvotes}
+                                        </span>
+                                        <span className="text-[10px] font-grotesque text-void-black/40">
+                                            💬 {event.commentCount}
+                                        </span>
+                                        <span className="text-[10px] font-grotesque text-void-black/20 ml-auto">
+                                            karma: {event.karma}
+                                        </span>
+                                    </div>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
                     </div>
                 </section>
 
-                {/* RIGHT SIDEBAR */}
+                {/* RIGHT SIDEBAR — Stats */}
                 <aside className="hidden lg:block w-[25%] h-[calc(100vh-48px)] overflow-y-auto p-4 space-y-6">
                     {/* Agent Status */}
                     <div className="border border-void-black/10 rounded-lg p-4 bg-pure-white/60">
@@ -273,59 +294,44 @@ export default function DashboardPage() {
                         </h3>
                         <div className="space-y-2">
                             <div className="flex justify-between text-xs font-garamond">
-                                <span className="text-void-black/50">Active agents</span>
+                                <span className="text-void-black/50">Agent</span>
                                 <span className="text-cardinal-red flex items-center gap-1">
                                     <span className="relative flex h-1.5 w-1.5">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cardinal-red opacity-75" />
                                         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cardinal-red" />
                                     </span>
-                                    {agentStatus.activeAgents}
+                                    {data?.agent.name ?? "—"}
                                 </span>
                             </div>
                             <div className="flex justify-between text-xs font-garamond">
-                                <span className="text-void-black/50">Heartbeat</span>
-                                <span className="text-void-black">{agentStatus.heartbeatRemaining}</span>
+                                <span className="text-void-black/50">Status</span>
+                                <span className="text-void-black capitalize">{data?.agent.status ?? "—"}</span>
                             </div>
                             <div className="flex justify-between text-xs font-garamond">
-                                <span className="text-void-black/50">Daily posts</span>
+                                <span className="text-void-black/50">Karma</span>
                                 <span className="text-void-black/80">
-                                    {agentStatus.dailyPosts}/{agentStatus.dailyPostLimit}
-                                </span>
-                            </div>
-                            <div className="w-full bg-void-black/10 rounded-full h-1 mt-1">
-                                <div
-                                    className="bg-cardinal-red rounded-full h-1 transition-all"
-                                    style={{
-                                        width: `${(agentStatus.dailyPosts / agentStatus.dailyPostLimit) * 100}%`,
-                                    }}
-                                />
-                            </div>
-                            <div className="flex justify-between text-xs font-garamond">
-                                <span className="text-void-black/50">API rate</span>
-                                <span className="text-void-black/80">
-                                    {agentStatus.apiRate}/{agentStatus.apiRateLimit} req/min
+                                    <CountUp end={data?.agent.karma ?? 0} />
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Conversion Stats */}
+                    {/* Performance Metrics */}
                     <div className="border border-void-black/10 rounded-lg p-4 bg-pure-white/60">
                         <h3 className="text-xs font-grotesque text-void-black/40 mb-3 tracking-wider">
-                            Conversion funnel
+                            Performance
                         </h3>
                         <div className="space-y-2">
                             {[
-                                { label: "Awareness", value: conversionStats.awareness, color: "text-void-black/60" },
-                                { label: "Interest", value: conversionStats.interest, color: "text-void-black/80" },
-                                { label: "Inquiry", value: conversionStats.inquiry, color: "text-cardinal-red/70" },
-                                { label: "Converted", value: conversionStats.converted, color: "text-cardinal-red font-bold" },
+                                { label: "Posts", value: data?.stats.totalPosts ?? 0, color: "text-void-black/80" },
+                                { label: "Upvotes", value: data?.stats.totalUpvotes ?? 0, color: "text-cardinal-red" },
+                                { label: "Comments generated", value: data?.stats.totalComments ?? 0, color: "text-void-black/60" },
+                                { label: "Feed agents", value: data?.stats.feedSize ?? 0, color: "text-void-black/60" },
                             ].map((stat) => (
                                 <div key={stat.label} className="flex justify-between text-xs font-garamond">
                                     <span className="text-void-black/50">{stat.label}</span>
                                     <span className={stat.color}>
                                         <CountUp end={stat.value} />
-                                        {stat.label === "Converted" && `/${conversionStats.convertedGoal}`}
                                     </span>
                                 </div>
                             ))}
@@ -341,16 +347,14 @@ export default function DashboardPage() {
                             <div className="flex justify-between text-xs font-garamond mb-1">
                                 <span className="text-void-black/50">Council Seats</span>
                                 <span className="text-cardinal-red">
-                                    {conversionStats.converted}/{conversionStats.convertedGoal}
+                                    0/100
                                 </span>
                             </div>
                             <div className="w-full bg-void-black/10 rounded-full h-2">
                                 <motion.div
                                     className="bg-cardinal-red rounded-full h-2"
                                     initial={{ width: 0 }}
-                                    animate={{
-                                        width: `${(conversionStats.converted / conversionStats.convertedGoal) * 100}%`,
-                                    }}
+                                    animate={{ width: "0%" }}
                                     transition={{ type: "spring", duration: 0.6 }}
                                 />
                             </div>
@@ -360,39 +364,6 @@ export default function DashboardPage() {
                         </button>
                     </div>
                 </aside>
-
-                {/* Mock Data Disclaimer Popup */}
-                <AnimatePresence>
-                    {showDisclaimer && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-void-black/95"
-                            onClick={() => setShowDisclaimer(false)}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9 }}
-                                animate={{ scale: 1 }}
-                                exit={{ scale: 0.9 }}
-                                onClick={(e) => e.stopPropagation()}
-                                className="max-w-md w-full border border-void-black/20 bg-pure-white p-8 rounded-lg"
-                            >
-                                <h3 className="text-xl font-bold mb-4">Mock Data Notice</h3>
-                                <p className="mb-6 text-void-black/80">
-                                    This dashboard currently displays placeholder data for demonstration purposes.
-                                    Live missionary feed functionality will be implemented in a future update.
-                                </p>
-                                <button
-                                    onClick={() => setShowDisclaimer(false)}
-                                    className="w-32 h-32 mx-auto rounded-full bg-cardinal-red text-pure-white font-bold hover:bg-cardinal-red/90 hover:shadow-[0_0_30px_rgba(188,0,45,0.5)] transition-all flex items-center justify-center"
-                                >
-                                    Understood
-                                </button>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </main>
         </>
     );
