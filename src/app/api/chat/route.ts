@@ -78,17 +78,21 @@ export async function POST(req: NextRequest) {
                     ? `[OBJECTION DETECTED — use rebuttal pattern] [Strategy: ${strategy}]`
                     : `[Strategy: ${strategy}]`;
 
+                const filteredMessages = messages
+                    .filter(m => m.role === "user" || m.role === "assistant")
+                    .map((m, i, arr) => ({
+                        role: m.role as "user" | "assistant",
+                        content:
+                            i === arr.length - 1 && m.role === "user"
+                                ? `${strategyHint} ${m.content}`
+                                : m.content,
+                    }));
+
                 const response = await anthropic.messages.create({
                     model: "claude-opus-4-6",
                     max_tokens: 1024,
                     system: DOCTRINE_SYSTEM_PROMPT,
-                    messages: messages.map((m, i) => ({
-                        role: m.role as "user" | "assistant",
-                        content:
-                            i === messages.length - 1 && m.role === "user"
-                                ? `${strategyHint} ${m.content}`
-                                : m.content,
-                    })),
+                    messages: filteredMessages,
                 });
 
                 reply =
