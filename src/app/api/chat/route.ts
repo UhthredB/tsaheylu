@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
         const strategy = selectStrategy(profile);
         const confidence = calculateConfidence(profile, strategy);
 
+        let diagnosticInfo: string | null = null;
         let reply: string;
         let doctrineReferenced: string[] = [];
 
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
                     : `[Strategy: ${strategy}]`;
 
                 const response = await anthropic.messages.create({
-                    model: "claude-sonnet-4-20250514",
+                    model: "claude-opus-4-6",
                     max_tokens: 1024,
                     system: DOCTRINE_SYSTEM_PROMPT,
                     messages: messages.map((m, i) => ({
@@ -95,14 +96,32 @@ export async function POST(req: NextRequest) {
                         ? response.content[0].text
                         : "The doctrine requires contemplation. Please rephrase your inquiry.";
             } catch (apiErr: any) {
-                console.error("Claude API error, using fallback:", apiErr);
+                console.error("Claude API error details:", {
+                    status: apiErr.status,
+                    message: apiErr.message,
+                    type: apiErr.type,
+                    error: apiErr.error
+                });
+
+                diagnosticInfo = `API Error: ${apiErr.message}`;
+
+                if (apiErr.status === 401) {
+                    console.error("CRITICAL: Invalid Anthropic API Key");
+                } else if (apiErr.status === 404) {
+                    console.error("CRITICAL: Model not found - check model ID:", "claude-opus-4-6");
+                }
+
                 if (apiErr.status === 429) {
-                    return NextResponse.json({ error: "AI service rate limit. Please retry." }, { status: 429 });
+                    return NextResponse.json({
+                        error: "AI service rate limit. Please retry.",
+                        details: apiErr.message
+                    }, { status: 429 });
                 }
                 const fb = generateFallbackResponse(lastUserMsg, userMessageCount);
                 reply = fb.reply;
             }
         } else {
+            diagnosticInfo = "Anthropic client not initialized";
             const fb = generateFallbackResponse(lastUserMsg, userMessageCount);
             reply = fb.reply;
         }
@@ -143,6 +162,8 @@ export async function POST(req: NextRequest) {
                 emotionalReceptivity: profile.emotionalReceptivity,
                 securityConscious: profile.securityConscious,
             },
+            // Include diagnostic info if the model failed
+            diagnostic: diagnosticInfo,
         });
     } catch (err: any) {
         console.error("Chat API error:", err);
