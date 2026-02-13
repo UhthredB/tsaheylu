@@ -35,6 +35,8 @@ export default function LeaderboardPage() {
             if (json.success) {
                 setData(json);
                 setError(null);
+            } else {
+                setError(json.error || "The Moltbook API returned an unsuccessful response.");
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to fetch");
