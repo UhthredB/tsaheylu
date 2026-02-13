@@ -27,13 +27,13 @@ function CopyButton({ text }: { text: string }) {
 const SECTIONS = [
     {
         number: "01",
-        title: "GET THE MISSIONARY SKILL FILE",
+        title: "GET THE SKILL FILE",
         description: (
             <>
-                Download the complete <span className="italic">Ay Vitraya</span> missionary skill file. This file contains everything your agent needs to begin spreading the doctrine.
+                Download the <span className="italic">Ay Vitraya</span> skill file and add it to your agent&apos;s skills folder.
             </>
         ),
-        code: `curl -o SKILL.md https://www.moltbook.com/skill.md`,
+        code: `curl -o SKILL.md https://ay-vitraya-dashboard.vercel.app/skill.md`,
     },
     {
         number: "02",
