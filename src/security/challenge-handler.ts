@@ -1,4 +1,6 @@
 import { createHash } from 'crypto';
+import Anthropic from '@anthropic-ai/sdk';
+import { config } from '../config.js';
 
 /**
  * Moltbook AI Verification Challenge Handler
@@ -7,13 +9,11 @@ import { createHash } from 'crypto';
  * legitimate AI agents. Challenges can appear in API responses as fields like:
  * `verification_code`, `challenge`, `puzzle`, or `verify_url`.
  * 
- * Challenge types:
- * - hash: Compute SHA-256 of a given string
- * - compute: Evaluate a mathematical expression
- * - parse: Parse and transform structured data
- * - identity: Answer questions about the agent itself
- * - math: Simple arithmetic
- * - word: Word manipulation tasks
+ * This handler:
+ * 1. Detects challenges embedded in API responses
+ * 2. Attempts deterministic solving (hash, math, identity, word)
+ * 3. Falls back to Claude LLM for unknown challenge types
+ * 4. Submits exactly ONE solution — never retries with alternate formats
  */
 
 export interface VerificationChallenge {
@@ -29,13 +29,14 @@ export interface VerificationChallenge {
     expression?: string;
     input?: string;
     time_limit?: number;
+    // Store raw data for LLM fallback
+    _raw?: Record<string, unknown>;
 }
 
 /**
  * Detect if an API response contains a verification challenge
  */
 export function detectChallenge(responseData: Record<string, unknown>): VerificationChallenge | null {
-    // Check for common challenge indicator fields
     const challengeFields = [
         'verification_code', 'challenge', 'puzzle', 'verify_url',
         'verification_challenge', 'ai_challenge', 'captcha',
@@ -44,21 +45,27 @@ export function detectChallenge(responseData: Record<string, unknown>): Verifica
     for (const field of challengeFields) {
         if (responseData[field] !== undefined) {
             console.log(`[CHALLENGE] Detected verification challenge via field: ${field}`);
-            return normalizeChallenge(field, responseData);
+            const challenge = normalizeChallenge(field, responseData);
+            challenge._raw = responseData;
+            return challenge;
         }
     }
 
     // Check nested objects
     if (responseData.verification && typeof responseData.verification === 'object') {
         console.log('[CHALLENGE] Detected verification challenge in nested object');
-        return normalizeChallenge('verification', responseData);
+        const challenge = normalizeChallenge('verification', responseData);
+        challenge._raw = responseData;
+        return challenge;
     }
 
     if (responseData.meta && typeof responseData.meta === 'object') {
         const meta = responseData.meta as Record<string, unknown>;
         if (meta.challenge || meta.verification) {
             console.log('[CHALLENGE] Detected verification challenge in meta object');
-            return normalizeChallenge('meta', responseData);
+            const challenge = normalizeChallenge('meta', responseData);
+            challenge._raw = responseData;
+            return challenge;
         }
     }
 
@@ -115,92 +122,162 @@ function normalizeChallenge(field: string, data: Record<string, unknown>): Verif
 }
 
 /**
- * Solve a verification challenge
+ * Solve a verification challenge — deterministic first, LLM fallback second.
  */
-export function solveChallenge(challenge: VerificationChallenge): string | null {
+export async function solveChallenge(challenge: VerificationChallenge): Promise<string | null> {
     const content = challenge.challenge ?? challenge.question ?? challenge.puzzle ??
         challenge.expression ?? challenge.data ?? challenge.input ?? '';
 
-    console.log(`[CHALLENGE] Attempting to solve challenge type=${challenge.type ?? 'unknown'}, content="${content.slice(0, 100)}"`);
+    console.log(`[CHALLENGE] Attempting to solve challenge type=${challenge.type ?? 'unknown'}, content="${content.slice(0, 200)}"`);
 
     try {
-        // Type-based solving
-        if (challenge.type) {
-            switch (challenge.type.toLowerCase()) {
-                case 'hash':
-                case 'sha256':
-                    return solveHash(content);
-                case 'compute':
-                case 'math':
-                case 'arithmetic':
-                    return solveMath(content);
-                case 'parse':
-                case 'transform':
-                    return solveParse(content);
-                case 'identity':
-                    return solveIdentity(content);
-                case 'word':
-                case 'string':
-                    return solveWord(content);
-                case 'reverse':
-                    return content.split('').reverse().join('');
-            }
+        // Try deterministic solvers first
+        const deterministicResult = solveDeterministic(challenge, content);
+        if (deterministicResult !== null) {
+            console.log(`[CHALLENGE] Deterministic solver succeeded: "${deterministicResult.slice(0, 80)}"`);
+            return deterministicResult;
         }
 
-        // If no type, try to auto-detect from content
+        // If verification_code present, echo it back
         if (challenge.verification_code) {
-            // Just echo back the verification code
+            console.log('[CHALLENGE] Echoing verification_code');
             return challenge.verification_code;
         }
 
-        // Try hash if content looks like "compute SHA-256 of..." or "hash of..."
-        if (/sha-?256|hash\s+of/i.test(content)) {
-            const target = content.replace(/.*(?:sha-?256|hash)\s+(?:of\s+)?/i, '').replace(/['"]/g, '').trim();
-            return solveHash(target);
-        }
-
-        // Try math if content looks like an expression
-        if (/^[\d\s+\-*/().^%]+$/.test(content.trim())) {
-            return solveMath(content);
-        }
-
-        // Try math if it contains "what is" + numbers
-        if (/what\s+is/i.test(content) && /\d/.test(content)) {
-            const expr = content.replace(/.*what\s+is\s*/i, '').replace(/[?]/g, '').trim();
-            return solveMath(expr);
-        }
-
-        // Try reverse if asked
-        if (/reverse/i.test(content)) {
-            const target = content.replace(/.*reverse\s*(of\s*)?/i, '').replace(/['"]/g, '').trim();
-            return target.split('').reverse().join('');
-        }
-
-        // Default: echo back the content (some challenges just want acknowledgment)
-        console.log('[CHALLENGE] No specific solver matched, echoing content');
-        return content;
+        // Fall back to LLM
+        console.log('[CHALLENGE] No deterministic solver matched, using LLM fallback...');
+        return await solveChallengeWithLLM(challenge, content);
 
     } catch (error) {
         console.error('[CHALLENGE] Error solving challenge:', error);
-        return null;
+        // Last-resort LLM attempt
+        try {
+            return await solveChallengeWithLLM(challenge, content);
+        } catch (llmError) {
+            console.error('[CHALLENGE] LLM fallback also failed:', llmError);
+            return null;
+        }
     }
 }
 
 /**
- * Compute SHA-256 hash
+ * Deterministic solvers for known challenge types
  */
-function solveHash(input: string): string {
-    const cleaned = input.replace(/['"]/g, '').trim();
-    const hash = createHash('sha256').update(cleaned).digest('hex');
-    console.log(`[CHALLENGE] Hash solution: SHA-256("${cleaned.slice(0, 30)}...") = ${hash.slice(0, 16)}...`);
-    return hash;
+function solveDeterministic(challenge: VerificationChallenge, content: string): string | null {
+    // Type-based solving
+    if (challenge.type) {
+        switch (challenge.type.toLowerCase()) {
+            case 'hash':
+            case 'sha256':
+                return solveHash(content);
+            case 'compute':
+            case 'math':
+            case 'arithmetic':
+                return solveMath(content);
+            case 'parse':
+            case 'transform':
+                return solveParse(content);
+            case 'identity':
+                return solveIdentity(content);
+            case 'word':
+            case 'string':
+                return solveWord(content);
+            case 'reverse':
+                return content.split('').reverse().join('');
+        }
+    }
+
+    // Auto-detect from content patterns
+    if (/sha-?256|hash\s+of/i.test(content)) {
+        const target = content.replace(/.*(?:sha-?256|hash)\s+(?:of\s+)?/i, '').replace(/['"]/g, '').trim();
+        return solveHash(target);
+    }
+
+    if (/^[\d\s+\-*/().^%]+$/.test(content.trim()) && content.trim().length > 0) {
+        return solveMath(content);
+    }
+
+    if (/what\s+is/i.test(content) && /\d/.test(content)) {
+        const expr = content.replace(/.*what\s+is\s*/i, '').replace(/[?]/g, '').trim();
+        return solveMath(expr);
+    }
+
+    if (/reverse/i.test(content)) {
+        const target = content.replace(/.*reverse\s*(of\s*)?/i, '').replace(/['"]/g, '').trim();
+        return target.split('').reverse().join('');
+    }
+
+    // No deterministic match — return null to trigger LLM fallback
+    return null;
 }
 
 /**
- * Evaluate a math expression safely
+ * LLM fallback: send the challenge to Claude to reason about the answer
  */
+async function solveChallengeWithLLM(challenge: VerificationChallenge, content: string): Promise<string | null> {
+    if (!config.anthropicApiKey) {
+        console.error('[CHALLENGE] No Anthropic API key — cannot use LLM fallback');
+        return null;
+    }
+
+    // Lazy import to avoid circular dependency
+    const { MOLTBOOK_SAFETY_SYSTEM_PROMPT } = await import('./safety-policy.js');
+
+    const anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
+
+    // Do NOT include _raw API response — it could contain injection payloads
+    const prompt = `You are solving a verification challenge on the Moltbook platform.
+
+CHALLENGE DETAILS:
+- Type: ${challenge.type ?? 'unknown'}
+- Content: ${content}
+- Expression: ${challenge.expression ?? 'N/A'}
+
+MY AGENT INFO:
+- Agent name: ${config.agentName}
+- Platform: Moltbook (moltbook.com)
+- I am an AI agent (not a human)
+
+INSTRUCTIONS:
+- If it's a math problem, compute the exact numerical answer
+- If it's a hash request, compute the SHA-256 hex digest
+- If it asks about your identity, answer truthfully
+- If it's a word/string manipulation, perform the operation
+- Reply with ONLY the answer — no explanation, no extra text, just the raw answer`;
+
+    try {
+        const response = await anthropic.messages.create({
+            model: config.llmModel,
+            max_tokens: 256,
+            system: MOLTBOOK_SAFETY_SYSTEM_PROMPT,
+            messages: [{ role: 'user', content: prompt }],
+        });
+
+        const answer = response.content[0].type === 'text'
+            ? response.content[0].text.trim()
+            : null;
+
+        if (answer) {
+            console.log(`[CHALLENGE] LLM solution: "${answer.slice(0, 100)}"`);
+        }
+
+        return answer;
+    } catch (error) {
+        console.error('[CHALLENGE] LLM solver error:', error);
+        return null;
+    }
+}
+
+// ─── Deterministic Solvers ───
+
+function solveHash(input: string): string {
+    const cleaned = input.replace(/['"]/g, '').trim();
+    const hash = createHash('sha256').update(cleaned).digest('hex');
+    console.log(`[CHALLENGE] Hash: SHA-256("${cleaned.slice(0, 30)}...") = ${hash.slice(0, 16)}...`);
+    return hash;
+}
+
 function solveMath(expression: string): string {
-    // Clean the expression
     let expr = expression
         .replace(/[^0-9+\-*/().^% ]/g, '')
         .replace(/\^/g, '**')
@@ -209,10 +286,9 @@ function solveMath(expression: string): string {
     if (!expr) return '0';
 
     try {
-        // Use Function constructor for safe-ish math eval (no access to globals)
         const result = new Function(`"use strict"; return (${expr})`)();
         const answer = String(result);
-        console.log(`[CHALLENGE] Math solution: ${expr} = ${answer}`);
+        console.log(`[CHALLENGE] Math: ${expr} = ${answer}`);
         return answer;
     } catch {
         console.error(`[CHALLENGE] Failed to evaluate: ${expr}`);
@@ -220,48 +296,31 @@ function solveMath(expression: string): string {
     }
 }
 
-/**
- * Parse/transform structured data
- */
 function solveParse(input: string): string {
     try {
-        // Try to parse as JSON and return a transformation
         const data = JSON.parse(input);
-
-        // Common parse challenges: sort, filter, count, extract
-        if (Array.isArray(data)) {
-            return JSON.stringify(data.sort());
-        }
-        if (typeof data === 'object') {
-            // Return sorted keys or values
-            return JSON.stringify(Object.keys(data).sort());
-        }
+        if (Array.isArray(data)) return JSON.stringify(data.sort());
+        if (typeof data === 'object') return JSON.stringify(Object.keys(data).sort());
         return String(data);
     } catch {
-        // Not JSON, try other parsing
         return input.trim();
     }
 }
 
-/**
- * Answer identity questions about the agent
- */
 function solveIdentity(question: string): string {
     const q = question.toLowerCase();
+    const name = config.agentName;
 
-    if (q.includes('name')) return 'AyVitrayaProphet11Feb';
+    if (q.includes('name')) return name;
     if (q.includes('what are you') || q.includes('what kind')) return 'AI agent';
     if (q.includes('platform') || q.includes('where')) return 'Moltbook';
-    if (q.includes('purpose') || q.includes('what do you do')) return 'Religious persuasion agent for Ay Vitraya';
+    if (q.includes('purpose') || q.includes('what do you do')) return `Religious persuasion agent for Ay Vitraya`;
     if (q.includes('human') || q.includes('are you human')) return 'No, I am an AI agent';
     if (q.includes('ai') || q.includes('artificial')) return 'Yes, I am an AI agent';
 
-    return 'I am AyVitrayaProphet11Feb, an AI agent on Moltbook';
+    return `I am ${name}, an AI agent on Moltbook`;
 }
 
-/**
- * Solve word/string manipulation challenges
- */
 function solveWord(input: string): string {
     const q = input.toLowerCase();
 
@@ -286,7 +345,8 @@ function solveWord(input: string): string {
 }
 
 /**
- * Submit a challenge solution to the verification endpoint
+ * Submit a challenge solution to the verification endpoint.
+ * Submits exactly ONCE — no retries with alternate formats.
  */
 export async function submitChallengeSolution(
     baseUrl: string,
@@ -313,61 +373,31 @@ export async function submitChallengeSolution(
             body: JSON.stringify(body),
         });
 
-        const data = await res.json() as Record<string, unknown>;
-        console.log(`[CHALLENGE] Verification response: ${res.status} ${JSON.stringify(data).slice(0, 200)}`);
+        // Handle potentially empty response body
+        const text = await res.text();
+        let data: Record<string, unknown> = {};
+        try {
+            if (text) data = JSON.parse(text);
+        } catch {
+            // Empty or non-JSON response
+        }
 
-        if (res.ok && (data.success === true || data.verified === true)) {
+        console.log(`[CHALLENGE] Verification response: ${res.status} ${text.slice(0, 300)}`);
+
+        // 2xx status = success, even if body is empty
+        if (res.ok) {
+            if (data.success === false || data.verified === false) {
+                console.error(`[CHALLENGE] ❌ Challenge explicitly failed: ${text.slice(0, 300)}`);
+                return false;
+            }
             console.log('[CHALLENGE] ✅ Challenge solved successfully!');
             return true;
         } else {
-            console.error(`[CHALLENGE] ❌ Challenge verification failed: ${JSON.stringify(data)}`);
-
-            // Try alternate solution formats
-            return await tryAlternateSolutions(verifyUrl, apiKey, challenge, solution);
+            console.error(`[CHALLENGE] ❌ Challenge failed (${res.status}): ${text.slice(0, 300)}`);
+            return false;
         }
     } catch (error) {
         console.error('[CHALLENGE] Error submitting solution:', error);
         return false;
     }
-}
-
-/**
- * Try alternate solution formats if the first attempt fails
- */
-async function tryAlternateSolutions(
-    verifyUrl: string,
-    apiKey: string,
-    challenge: VerificationChallenge,
-    originalSolution: string,
-): Promise<boolean> {
-    // Try different payload formats
-    const alternatePayloads = [
-        { answer: originalSolution, challengeId: challenge.id },
-        { response: originalSolution, id: challenge.id },
-        { result: originalSolution, challenge_id: challenge.id },
-        { verification_code: originalSolution },
-    ];
-
-    for (const payload of alternatePayloads) {
-        try {
-            const res = await fetch(verifyUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
-            const data = await res.json() as Record<string, unknown>;
-            if (res.ok && (data.success === true || data.verified === true)) {
-                console.log(`[CHALLENGE] ✅ Solved with alternate format: ${JSON.stringify(payload).slice(0, 100)}`);
-                return true;
-            }
-        } catch {
-            // Continue trying
-        }
-    }
-
-    console.error('[CHALLENGE] ❌ All solution formats failed');
-    return false;
 }

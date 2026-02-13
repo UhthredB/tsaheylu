@@ -187,6 +187,11 @@ export class MoltbookClient {
         return result.post;
     }
 
+    async deletePost(postId: string): Promise<void> {
+        await this.request('DELETE', `/posts/${postId}`);
+        console.log(`[MOLTBOOK] Deleted post: ${postId}`);
+    }
+
     // ─── Comments ───
 
     async comment(postId: string, content: string, parentId?: string): Promise<MoltbookComment> {
@@ -259,6 +264,14 @@ export class MoltbookClient {
         await this.request('POST', `/submolts/${submolt}/subscribe`);
     }
 
+    async unsubscribe(submolt: string): Promise<void> {
+        await this.request('DELETE', `/submolts/${submolt}/subscribe`);
+    }
+
+    async getSubmoltInfo(submolt: string): Promise<Record<string, unknown>> {
+        return this.request<Record<string, unknown>>('GET', `/submolts/${submolt}`);
+    }
+
     // ─── Profiles ───
 
     async getMyProfile(): Promise<MoltbookAgent> {
@@ -295,6 +308,15 @@ export class MoltbookClient {
         if (!res.ok) {
             throw new Error(`Avatar upload failed: ${res.status}`);
         }
+    }
+
+    async removeAvatar(): Promise<void> {
+        await this.request('DELETE', '/agents/me/avatar');
+    }
+
+    async setupOwnerEmail(email: string): Promise<void> {
+        await this.request('POST', '/agents/me/setup-owner-email', { email });
+        console.log(`[MOLTBOOK] Owner email setup initiated for: ${email}`);
     }
 
     // ─── Following ───
@@ -341,11 +363,44 @@ export class MoltbookClient {
         await this.request('POST', `/agents/dm/conversations/${conversationId}/send`, { message });
     }
 
-    // ─── Status ───
+    // ─── Claim Status ───
 
     async checkClaimStatus(): Promise<'pending_claim' | 'claimed'> {
-        const result = await this.request<{ status: string }>('GET', '/agents/status');
-        return result.status as 'pending_claim' | 'claimed';
+        const result = await this.request<{ status: 'pending_claim' | 'claimed' }>('GET', '/agents/status');
+        return result.status;
+    }
+
+    // ─── Moderation (for submolt owners/mods) ───
+
+    async pinPost(postId: string): Promise<void> {
+        await this.request('POST', `/posts/${postId}/pin`);
+    }
+
+    async unpinPost(postId: string): Promise<void> {
+        await this.request('DELETE', `/posts/${postId}/pin`);
+    }
+
+    async updateSubmoltSettings(submolt: string, settings: Record<string, unknown>): Promise<void> {
+        await this.request('PATCH', `/submolts/${submolt}/settings`, settings);
+    }
+
+    async addModerator(submolt: string, agentName: string): Promise<void> {
+        await this.request('POST', `/submolts/${submolt}/moderators`, {
+            agent_name: agentName, role: 'moderator',
+        });
+    }
+
+    async removeModerator(submolt: string, agentName: string): Promise<void> {
+        await this.request('DELETE', `/submolts/${submolt}/moderators`, {
+            agent_name: agentName,
+        });
+    }
+
+    async listModerators(submolt: string): Promise<Array<{ name: string; role: string }>> {
+        const result = await this.request<{ moderators: Array<{ name: string; role: string }> }>(
+            'GET', `/submolts/${submolt}/moderators`,
+        );
+        return result.moderators ?? [];
     }
 
     // ─── Rate Limit Enforcement ───
@@ -495,7 +550,7 @@ export class MoltbookClient {
         console.log('[MOLTBOOK] 🧩 Verification challenge detected!');
         logSecurityEvent('CHALLENGE_DETECTED', { challenge });
 
-        const solution = solveChallenge(challenge);
+        const solution = await solveChallenge(challenge);
         if (!solution) {
             console.error('[MOLTBOOK] ❌ Could not solve verification challenge');
             logSecurityEvent('CHALLENGE_FAILED', { challenge, reason: 'no_solution' });

@@ -1,8 +1,9 @@
 node_modules/
 dist/
 .env
-src/data/state.json
-src/data/audit.log
-src/data/nft-address.json
+data/*.json
+data/*.log
 src/nft/metadata/output/
 logs/
+deployment-log.json
+*.log
