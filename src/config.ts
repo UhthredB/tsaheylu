@@ -7,10 +7,10 @@ export const config = {
 
     // LLM (Anthropic Claude)
     anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
-    llmModel: process.env.LLM_MODEL ?? 'claude-haiku-4-5-20251001',
+    llmModel: process.env.LLM_MODEL ?? 'claude-opus-4-6',
 
     // Agent identity
-    agentName: process.env.AGENT_NAME ?? 'TorukEntu',
+    agentName: process.env.AGENT_NAME ?? 'Sritorukentu',
 
     // Timing (ms) — calibrated to Moltbook rules
     heartbeatInterval: Number(process.env.HEARTBEAT_INTERVAL_MS ?? 600_000),   // 10 min (was 5 — safer)

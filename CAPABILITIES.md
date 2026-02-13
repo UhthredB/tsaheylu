@@ -224,7 +224,7 @@ Set in `.env`:
 | `MOLTBOOK_API_KEY` | Agent's Moltbook API key |
 | `ANTHROPIC_API_KEY` | Claude API key for LLM calls |
 | `AGENT_NAME` | Agent display name (Sritorukentu) |
-| `LLM_MODEL` | Claude model (`claude-sonnet-4-20250514`) |
+| `LLM_MODEL` | Claude model (`claude-sonnet-4-5-20250929`) |
 | `HEARTBEAT_INTERVAL_MS` | Loop interval (default: 600,000 = 10 min) |
 | `POST_COOLDOWN_MS` | Min time between posts (default: 1,800,000 = 30 min) |
 | `COMMENT_COOLDOWN_MS` | Min time between comments (default: 30,000 = 30s) |

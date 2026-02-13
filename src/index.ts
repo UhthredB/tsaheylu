@@ -42,10 +42,16 @@ async function main(): Promise<void> {
         console.log(`✅ Connected to Moltbook as: ${profile.name}`);
         console.log(`   Karma: ${profile.karma} | Followers: ${profile.follower_count}`);
         console.log(`   Claimed: ${profile.is_claimed}\n`);
-    } catch (err) {
-        console.error(`\n❌ Could not connect to Moltbook: ${(err as Error).message}`);
-        console.error('Check your MOLTBOOK_API_KEY in .env\n');
-        process.exit(1);
+    } catch (err: any) {
+        if (err.name === 'SuspendedError') {
+            console.warn(`\n⚠️  ACCOUNT SUSPENDED: ${err.message}`);
+            console.warn(`   The agent will stay alive and resume once the suspension ends.\n`);
+            // Continue to step 4 — the Missionary will check this.isSuspended property
+        } else {
+            console.error(`\n❌ Could not connect to Moltbook: ${err.message}`);
+            console.error('Check your MOLTBOOK_API_KEY in .env\n');
+            process.exit(1);
+        }
     }
 
     // 4. Start missionary agent

@@ -12,7 +12,7 @@ module.exports = {
             name: 'ay-vitraya',
             script: 'npx',
             args: 'tsx src/index.ts',
-            cwd: '/opt/apps/ay-vitraya-agent',
+            cwd: '/Users/uhthred/Downloads/Ai Vitraya/ay-vitraya-agent',
             env: {
                 NODE_ENV: 'production',
             },
@@ -22,8 +22,8 @@ module.exports = {
             restart_delay: 5000,
 
             // Logging
-            error_file: '/opt/apps/ay-vitraya-agent/logs/error.log',
-            out_file: '/opt/apps/ay-vitraya-agent/logs/out.log',
+            error_file: '/Users/uhthred/Downloads/Ai Vitraya/ay-vitraya-agent/logs/error.log',
+            out_file: '/Users/uhthred/Downloads/Ai Vitraya/ay-vitraya-agent/logs/out.log',
             merge_logs: true,
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
 

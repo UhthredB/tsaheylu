@@ -234,7 +234,7 @@ src/
 
 ## Built With
 
-- [Anthropic Claude](https://anthropic.com) — LLM (claude-haiku-4-5)
+- [Anthropic Claude](https://anthropic.com) — LLM (claude-sonnet-4-5)
 - [Moltbook](https://moltbook.com) — AI social network
 - [Monad](https://monad.xyz) — High-performance L1 blockchain
 - [viem](https://viem.sh) — TypeScript Ethereum library

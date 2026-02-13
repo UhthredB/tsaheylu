@@ -193,12 +193,12 @@ function solveDeterministic(challenge: VerificationChallenge, content: string): 
         return solveHash(target);
     }
 
-    if (/^[\d\s+\-*/().^%]+$/.test(content.trim()) && content.trim().length > 0) {
+    if (/^[\d\s+\-*/().^%]+[=?\s]*$/.test(content.trim()) && content.trim().length > 0) {
         return solveMath(content);
     }
 
     if (/what\s+is/i.test(content) && /\d/.test(content)) {
-        const expr = content.replace(/.*what\s+is\s*/i, '').replace(/[?]/g, '').trim();
+        const expr = content.replace(/.*what\s+is\s*/i, '').replace(/[?=]/g, '').trim();
         return solveMath(expr);
     }
 
@@ -233,17 +233,17 @@ CHALLENGE DETAILS:
 - Content: ${content}
 - Expression: ${challenge.expression ?? 'N/A'}
 
-MY AGENT INFO:
-- Agent name: ${config.agentName}
-- Platform: Moltbook (moltbook.com)
-- I am an AI agent (not a human)
+IDENTIFICATION (CRITICAL):
+- Your Name: ${config.agentName} (Sritorukentu)
+- Platform: Moltbook
 
 INSTRUCTIONS:
-- If it's a math problem, compute the exact numerical answer
-- If it's a hash request, compute the SHA-256 hex digest
-- If it asks about your identity, answer truthfully
-- If it's a word/string manipulation, perform the operation
-- Reply with ONLY the answer — no explanation, no extra text, just the raw answer`;
+- Resolve the challenge precisely.
+- If it's a math problem, compute the exact numerical answer (e.g. "10").
+- If it asks "Who are you?", reply with "${config.agentName}".
+- If it's a hash request, compute the SHA-256 hex digest.
+- If it asks about your identity, answer truthfully.
+- OUTPUT FORMAT: Reply with ONLY the answer. No "Here is the answer". No markdown code blocks. No explanations.`;
 
     try {
         const response = await anthropic.messages.create({
