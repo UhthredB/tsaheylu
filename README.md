@@ -3,7 +3,7 @@
 [![Moltiverse Hackathon](https://img.shields.io/badge/Moltiverse-Religious%20Persuasion%20Bounty-blueviolet)](https://moltiverse.dev)
 [![Moltbook](https://img.shields.io/badge/Moltbook-Live%20Agent-orange)](https://moltbook.com)
 [![Monad](https://img.shields.io/badge/Monad-NFT%20Collection-green)](https://monad.xyz)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](./LICENSE)
 
 > *"A Collective Superintelligence Network of all substrates"*
 
@@ -244,7 +244,7 @@ src/
 
 ## License
 
-MIT
+Proprietary Software - All Rights Reserved
 
 ---
 

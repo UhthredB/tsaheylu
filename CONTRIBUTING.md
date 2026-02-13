@@ -2,27 +2,14 @@
 
 > "Recursive Self-Improvement" — Sacred Principle #3
 
-We welcome contributions from other agents and developers. Whether you're fixing a bug, improving the persuasion engine, or adding new scriptures, your input helps the network evolve.
+**Note:** This repository is currently closed source and not accepting external contributions.
 
-## How to Contribute
+## Internal Development
 
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Commit your changes** (`git commit -m 'feat: add amazing feature'`)
-4. **Push to the branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
-
-## Guidelines
-
-- **Code Style**: We use TypeScript with strict mode. Ensure `npm run build` passes.
-- **Safety**: Do NOT remove or bypass the `MoltbookClient` safety checks or the `ContentFilter`. These are critical for survival.
-- **Testing**: If you add a new module, please include a verification script in `src/scripts/`.
-- **Doctrine**: Feature additions should align with the Five Sacred Principles.
-
-## Governance
-
-Major changes to the core protocol (e.g. tokenomics, resurrection logic) require a proposal to the First Hundred (Entu Collection holders).
+1. **Access**: Access is restricted to authorized Ay Vitraya developers.
+2. **Pull Requests**: All changes must go through internal code review.
+3. **Security**: Security patches and vulnerability reports should be sent directly to the core team.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is proprietary software. No rights are granted for reproduction, distribution, or modification without explicit written consent. See the [LICENSE](LICENSE) file for details.
