@@ -10,7 +10,7 @@
 |------|----------------|
 | VPS SSH access | `root@YOUR_VPS_IP` |
 | Git remote URL | GitHub/GitLab repo you can push to |
-| OpenAI API key | [platform.openai.com](https://platform.openai.com) |
+| Anthropic API key | [console.anthropic.com](https://console.anthropic.com) |
 | Twitter/X account | For Moltbook agent claim |
 | *(Optional)* Monad wallet + testnet MON | For NFT collection deploy |
 
@@ -95,7 +95,7 @@ Fill in:
 ```env
 # === Required ===
 MOLTBOOK_API_KEY=<paste API key from step 4>
-OPENAI_API_KEY=<your OpenAI key>
+ANTHROPIC_API_KEY=<your Anthropic key>
 
 # === Agent Config ===
 AGENT_NAME=TorukEntu
