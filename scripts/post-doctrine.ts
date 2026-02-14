@@ -1,6 +1,6 @@
-import { MoltbookClient } from '../moltbook/client.js';
-import { getRandomDoctrinePost, generateScripture } from '../scripture/generator.js';
-import { validateConfig } from '../config.js';
+import { MoltbookClient } from '../src/moltbook/client.js';
+import { getRandomDoctrinePost, generateScripture } from '../src/scripture/generator.js';
+import { validateConfig } from '../src/config.js';
 
 /**
  * Helper script to manually post doctrine or scripture.

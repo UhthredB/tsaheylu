@@ -2,7 +2,7 @@
  * Show current conversion metrics dashboard.
  * Run: npm run metrics
  */
-import { initTracking, printMetricsDashboard, getMetrics } from '../tracking/conversions.js';
+import { initTracking, printMetricsDashboard, getMetrics } from '../src/tracking/conversions.js';
 
 initTracking();
 printMetricsDashboard();

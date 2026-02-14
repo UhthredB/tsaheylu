@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { config, validateConfig } from '../config.js';
-import { MoltbookClient } from '../moltbook/client.js';
+import { config, validateConfig } from '../src/config.js';
+import { MoltbookClient } from '../src/moltbook/client.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 async function testKeys() {

@@ -175,7 +175,7 @@ npm run nft:mint -- --to 0xADDR --count 5  # Mint NFTs
 
 ## Deployment (VPS)
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for full instructions (Hostinger KVM 1, PM2, systemd).
+See [docs/deployment.md](./docs/deployment.md) for full instructions (Hostinger KVM 1, PM2, systemd).
 
 ```bash
 pm2 start ecosystem.config.cjs
@@ -187,37 +187,74 @@ pm2 logs ay-vitraya --lines 20
 ## Project Structure
 
 ```
-src/
-├── index.ts              # Entry point & graceful shutdown
-├── config.ts             # Config with Moltbook-calibrated limits
-├── moltbook/
-│   ├── client.ts         # API client (rate-limited, suspension-aware)
-│   └── types.ts          # TypeScript interfaces
-├── persuasion/
-│   └── engine.ts         # 6-strategy profiling & persuasion
-├── debate/
-│   └── debater.ts        # Objection detection & rebuttals
-├── scripture/
-│   ├── generator.ts      # Dynamic parable/prophecy generation
-│   └── doctrine.ts       # Pre-written doctrine database
-├── missionary/
-│   └── outreach.ts       # Heartbeat loop & engagement
-├── security/
-│   ├── safety-policy.ts  # Hardcoded safety rules
-│   ├── content-filter.ts # Injection & threat detection
-│   ├── audit-log.ts      # Append-only security log
-│   └── challenge-handler.ts  # AI verification solver
-├── tracking/
-│   └── conversions.ts    # Conversion funnel & metrics
-├── nft/
-│   ├── contract/AyVitraya100.sol  # ERC-721 Solidity
-│   ├── deploy.ts         # Monad deployment script
-│   ├── mint.ts           # NFT minting script
-│   └── metadata/         # Metadata generator
-└── scripts/
-    ├── register.ts       # Moltbook registration
-    ├── post-doctrine.ts  # Manual post trigger
-    └── show-metrics.ts   # Metrics dashboard
+ay-vitraya-agent/
+├── src/                           # Core application source
+│   ├── index.ts                   # Entry point & graceful shutdown
+│   ├── config.ts                  # Config with Moltbook-calibrated limits
+│   ├── moltbook/                  # Moltbook API integration
+│   │   ├── client.ts              #   Rate-limited, suspension-aware client
+│   │   └── types.ts               #   TypeScript interfaces
+│   ├── missionary/                # Engagement loop
+│   │   └── outreach.ts            #   Heartbeat loop & target discovery
+│   ├── persuasion/                # Persuasion engine
+│   │   └── engine.ts              #   6-strategy profiling & reply crafting
+│   ├── debate/                    # Debate system
+│   │   └── debater.ts             #   Objection detection & rebuttals
+│   ├── scripture/                 # Content generation
+│   │   ├── doctrine.ts            #   Pre-written doctrine database
+│   │   └── generator.ts           #   Dynamic parable/prophecy generation
+│   ├── security/                  # Safety & compliance
+│   │   ├── safety-policy.ts       #   Hardcoded safety rules
+│   │   ├── content-filter.ts      #   Injection & threat detection
+│   │   ├── audit-log.ts           #   Append-only security log
+│   │   └── challenge-handler.ts   #   AI verification solver
+│   ├── tracking/                  # Analytics
+│   │   └── conversions.ts         #   Conversion funnel & metrics
+│   └── nft/                       # Monad NFT module
+│       ├── contract/              #   Solidity contract & artifacts
+│       │   └── AyVitraya100.sol   #   ERC-721 (deployed to Monad mainnet)
+│       ├── deploy.ts              #   Deployment script (viem)
+│       ├── mint.ts                #   Minting script
+│       ├── scripts/               #   NFT utility scripts
+│       └── metadata/              #   Metadata generator & output
+│
+├── scripts/                       # Standalone utility scripts
+│   ├── register.ts                # Moltbook agent registration
+│   ├── post-doctrine.ts           # Manual doctrine post trigger
+│   ├── show-metrics.ts            # Conversion metrics dashboard
+│   ├── test-connection.ts         # API key verification
+│   └── test-challenge-handler.ts  # Challenge solver test suite
+│
+├── docs/                          # Documentation
+│   ├── capabilities.md            # Agent capabilities overview
+│   ├── contributing.md            # Contribution guidelines
+│   ├── deployment.md              # VPS deployment guide (PM2)
+│   ├── network-participation.md   # Moltbook network rules
+│   ├── openclaw-skill.md          # OpenClaw skill documentation
+│   ├── railway-deploy.md          # Railway deployment guide
+│   ├── ritual-protocol.md         # Ritual protocol specification
+│   ├── security-audit.md          # Security audit notes
+│   ├── nft/                       # NFT-specific documentation
+│   │   ├── mainnet-deployment.md  #   Full mainnet deployment guide
+│   │   ├── mainnet-quickstart.md  #   5-minute quick reference
+│   │   ├── mainnet-readme.md      #   NFT package overview
+│   │   ├── metadata-guide.md      #   IPFS metadata creation guide
+│   │   └── test-results.md        #   Foundry test results (23/23)
+│   └── *.md                       # Architecture & planning docs
+│
+├── test/                          # Smart contract tests
+│   └── AyVitraya100.t.sol         # Foundry test suite
+├── data/                          # Runtime state (gitignored)
+├── logs/                          # Application logs (gitignored)
+├── openclaw-skill/                # OpenClaw skill package
+│
+├── .env.example                   # Environment template
+├── Dockerfile                     # Docker build
+├── ecosystem.config.cjs           # PM2 process config
+├── foundry.toml                   # Foundry/Solidity config
+├── package.json                   # Node.js dependencies & scripts
+├── tsconfig.json                  # TypeScript config
+└── README.md                      # This file
 ```
 
 ---

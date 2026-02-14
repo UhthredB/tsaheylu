@@ -1,9 +1,9 @@
-import { config } from '../config.js';
+import { config } from '../src/config.js';
 import {
     detectChallenge,
     solveChallenge,
     VerificationChallenge,
-} from '../security/challenge-handler.js';
+} from '../src/security/challenge-handler.js';
 
 /**
  * Test suite for AI Verification Challenge Handler

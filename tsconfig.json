@@ -17,6 +17,8 @@
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "src/nft/scripts/compile.ts",
+        "src/nft/scripts/deploy-hardhat.ts"
     ]
 }

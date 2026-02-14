@@ -242,11 +242,11 @@ cast call <ADDRESS> "getContractBalance()" --rpc-url <RPC>
 
 ## 📖 Documentation Index
 
-1. **Start Here**: MAINNET_DEPLOYMENT.md
-2. **Quick Reference**: MAINNET_QUICKSTART.md
-3. **Metadata Setup**: METADATA_GUIDE.md
-4. **Test Results**: TEST_RESULTS.md
-5. **This File**: README_MAINNET.md
+1. **Start Here**: mainnet-deployment.md
+2. **Quick Reference**: mainnet-quickstart.md
+3. **Metadata Setup**: metadata-guide.md
+4. **Test Results**: test-results.md
+5. **This File**: mainnet-readme.md
 
 ---
 

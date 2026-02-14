@@ -1,14 +1,43 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+
+# Environment & secrets
 .env
+.env.local
+.env.*.local
+
+# Runtime data
 data/*.json
 data/*.log
-src/nft/metadata/output/
+data/audit.log
+
+# Logs
 logs/
-deployment-log.json
 *.log
 
 # Foundry build artifacts
 out/
 cache/
 foundry.lock
+
+# NFT metadata (generated)
+src/nft/metadata/output/
+src/nft/metadata/placeholder/
+src/nft/data/deployment-raw.json
+deployment-log.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc
+*.tgz

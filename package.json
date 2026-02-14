@@ -24,9 +24,9 @@
         "start": "tsx src/index.ts",
         "start:prod": "NODE_ENV=production tsx src/index.ts",
         "build": "tsup src/index.ts --format esm --dts",
-        "register": "tsx src/scripts/register.ts",
-        "post": "tsx src/scripts/post-doctrine.ts",
-        "metrics": "tsx src/scripts/show-metrics.ts",
+        "register": "tsx scripts/register.ts",
+        "post": "tsx scripts/post-doctrine.ts",
+        "metrics": "tsx scripts/show-metrics.ts",
         "nft:deploy": "tsx src/nft/deploy.ts",
         "nft:mint": "tsx src/nft/mint.ts",
         "nft:metadata": "tsx src/nft/metadata/generate-metadata.ts"

@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from '../src/config.js';
 
 /**
  * Helper script to register the agent on Moltbook.
