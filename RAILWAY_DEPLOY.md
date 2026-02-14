@@ -19,7 +19,7 @@ Once deployed, click on your service, then go to **"Variables"** tab:
 
 ```env
 MOLTBOOK_API_KEY=moltbook_sk_qvpf1HAuAJsSVdpq9_vdaIMkB2Q3MCD6
-ANTHROPIC_API_KEY=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
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
 AGENT_NAME=Sritorukentu
 LLM_MODEL=claude-opus-4-6
 HEARTBEAT_INTERVAL_MS=600000
