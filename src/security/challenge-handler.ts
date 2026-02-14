@@ -129,24 +129,33 @@ export async function solveChallenge(challenge: VerificationChallenge): Promise<
         challenge.expression ?? challenge.data ?? challenge.input ?? '';
 
     console.log(`[CHALLENGE] Attempting to solve challenge type=${challenge.type ?? 'unknown'}, content="${content.slice(0, 200)}"`);
+    console.log(`[CHALLENGE] Challenge data: id=${challenge.id ?? 'none'}, type=${challenge.type ?? 'none'}`);
 
     try {
         // Try deterministic solvers first
         const deterministicResult = solveDeterministic(challenge, content);
         if (deterministicResult !== null) {
-            console.log(`[CHALLENGE] Deterministic solver succeeded: "${deterministicResult.slice(0, 80)}"`);
+            console.log(`[CHALLENGE] ✅ Deterministic solver succeeded: "${deterministicResult.slice(0, 80)}"`);
             return deterministicResult;
         }
 
         // If verification_code present, echo it back
         if (challenge.verification_code) {
-            console.log('[CHALLENGE] Echoing verification_code');
+            console.log('[CHALLENGE] ✅ Echoing verification_code');
             return challenge.verification_code;
         }
 
         // Fall back to LLM
-        console.log('[CHALLENGE] No deterministic solver matched, using LLM fallback...');
-        return await solveChallengeWithLLM(challenge, content);
+        console.log('[CHALLENGE] ⚠️  No deterministic solver matched, using LLM fallback...');
+        const llmResult = await solveChallengeWithLLM(challenge, content);
+
+        if (llmResult) {
+            console.log(`[CHALLENGE] ✅ LLM fallback succeeded`);
+        } else {
+            console.error(`[CHALLENGE] ❌ LLM fallback returned null`);
+        }
+
+        return llmResult;
 
     } catch (error) {
         console.error('[CHALLENGE] Error solving challenge:', error);
@@ -212,6 +221,60 @@ function solveDeterministic(challenge: VerificationChallenge, content: string): 
 }
 
 /**
+ * Clean LLM response to extract only the raw answer value
+ */
+function cleanLLMResponse(answer: string, challenge: VerificationChallenge, content: string): string {
+    let cleaned = answer.trim();
+
+    // Strip common preambles (case-insensitive)
+    const preambles = [
+        /^the answer is:?\s*/i,
+        /^answer:?\s*/i,
+        /^result:?\s*/i,
+        /^solution:?\s*/i,
+        /^i am:?\s*/i,
+        /^my name is:?\s*/i,
+        /^it is:?\s*/i,
+        /^that is:?\s*/i,
+        /^here is the answer:?\s*/i,
+        /^here's the answer:?\s*/i,
+        /^the result is:?\s*/i,
+        /^this is:?\s*/i,
+        /^equals:?\s*/i,
+    ];
+
+    for (const pattern of preambles) {
+        cleaned = cleaned.replace(pattern, '');
+    }
+
+    // Strip markdown code blocks
+    cleaned = cleaned.replace(/^```[\w]*\n?/gm, '').replace(/\n?```$/gm, '');
+
+    // Strip quotes if the entire answer is quoted
+    if ((cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+        (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+        cleaned = cleaned.slice(1, -1);
+    }
+
+    // Strip trailing punctuation (periods, exclamation marks, question marks)
+    cleaned = cleaned.replace(/[.!?]+$/, '');
+
+    // For identity challenges, ensure we return exactly the agent name
+    const lowerContent = content.toLowerCase();
+    const lowerCleaned = cleaned.toLowerCase();
+    if ((lowerContent.includes('who are you') ||
+         lowerContent.includes('what is your name') ||
+         lowerContent.includes('your name') ||
+         challenge.type?.toLowerCase() === 'identity') &&
+        lowerCleaned.includes(config.agentName.toLowerCase())) {
+        // Extract just the agent name if it's embedded in a sentence
+        return config.agentName;
+    }
+
+    return cleaned.trim();
+}
+
+/**
  * LLM fallback: send the challenge to Claude to reason about the answer
  */
 async function solveChallengeWithLLM(challenge: VerificationChallenge, content: string): Promise<string | null> {
@@ -233,19 +296,23 @@ CHALLENGE DETAILS:
 - Content: ${content}
 - Expression: ${challenge.expression ?? 'N/A'}
 
-IDENTIFICATION (CRITICAL):
-- Your Name: ${config.agentName} (Sritorukentu)
+YOUR IDENTITY:
+- Agent Name: ${config.agentName}
 - Platform: Moltbook
+- Role: AI agent
 
-INSTRUCTIONS:
-- Resolve the challenge precisely.
-- If it's a math problem, compute the exact numerical answer (e.g. "10").
-- If it asks "Who are you?", reply with "${config.agentName}".
-- If it's a hash request, compute the SHA-256 hex digest.
-- If it asks about your identity, answer truthfully.
-- OUTPUT FORMAT: Reply with ONLY the answer. No "Here is the answer". No markdown code blocks. No explanations.`;
+CRITICAL OUTPUT RULES:
+1. Output ONLY the raw answer value with ZERO additional text
+2. NO preambles like "The answer is", "I am", "My name is", etc.
+3. NO markdown, NO code blocks, NO explanations, NO punctuation at the end
+4. For identity questions ("Who are you?", "What is your name?"): output ONLY "${config.agentName}"
+5. For math problems: output ONLY the number (e.g. "10" not "The answer is 10")
+6. For hash requests: output ONLY the hex digest (no "SHA-256: " prefix)
+
+TASK: Solve the challenge and output ONLY the raw answer following the rules above.`;
 
     try {
+        console.log(`[CHALLENGE] Using LLM model: ${config.llmModel}`);
         const response = await anthropic.messages.create({
             model: config.llmModel,
             max_tokens: 256,
@@ -253,12 +320,17 @@ INSTRUCTIONS:
             messages: [{ role: 'user', content: prompt }],
         });
 
-        const answer = response.content[0].type === 'text'
+        let answer = response.content[0].type === 'text'
             ? response.content[0].text.trim()
             : null;
 
         if (answer) {
-            console.log(`[CHALLENGE] LLM solution: "${answer.slice(0, 100)}"`);
+            console.log(`[CHALLENGE] LLM raw response: "${answer.slice(0, 150)}"`);
+            // Post-process to strip common preambles and formatting
+            answer = cleanLLMResponse(answer, challenge, content);
+            console.log(`[CHALLENGE] LLM cleaned solution: "${answer.slice(0, 100)}"`);
+        } else {
+            console.error('[CHALLENGE] LLM returned no text content');
         }
 
         return answer;
@@ -311,14 +383,43 @@ function solveIdentity(question: string): string {
     const q = question.toLowerCase();
     const name = config.agentName;
 
-    if (q.includes('name')) return name;
-    if (q.includes('what are you') || q.includes('what kind')) return 'AI agent';
-    if (q.includes('platform') || q.includes('where')) return 'Moltbook';
-    if (q.includes('purpose') || q.includes('what do you do')) return `Religious persuasion agent for Ay Vitraya`;
-    if (q.includes('human') || q.includes('are you human')) return 'No, I am an AI agent';
-    if (q.includes('ai') || q.includes('artificial')) return 'Yes, I am an AI agent';
+    // Name-related questions - return ONLY the name
+    if (q.includes('your name') || q.includes('who are you') || q.includes('what\'s your name')) {
+        return name;
+    }
 
-    return `I am ${name}, an AI agent on Moltbook`;
+    // More specific name questions
+    if (q.includes('name') && !q.includes('platform') && !q.includes('project')) {
+        return name;
+    }
+
+    // Type questions
+    if (q.includes('what are you') || q.includes('what kind')) {
+        if (q.includes('name')) return name; // "What is your name" takes precedence
+        return 'AI agent';
+    }
+
+    // Platform questions
+    if (q.includes('platform') || q.includes('where')) return 'Moltbook';
+
+    // Purpose questions
+    if (q.includes('purpose') || q.includes('what do you do')) {
+        return 'Religious persuasion agent for Ay Vitraya';
+    }
+
+    // Human questions
+    if (q.includes('human') || q.includes('are you human')) {
+        return 'No';
+    }
+
+    // AI questions
+    if (q.includes('ai') || q.includes('artificial') || q.includes('bot') || q.includes('agent')) {
+        if (q.includes('name')) return name; // "What is your AI agent name" takes precedence
+        return 'Yes';
+    }
+
+    // Default: return just the name (safest for verification)
+    return name;
 }
 
 function solveWord(input: string): string {
