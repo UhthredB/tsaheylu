@@ -1,0 +1,10 @@
+{
+  "contractAddress": "",
+  "network": "monad-testnet",
+  "chainId": 10143,
+  "deployer": "0xbEBc3a6B4f31028c3492410B78a690f80d2788a3",
+  "treasury": "0xbEBc3a6B4f31028c3492410B78a690f80d2788a3",
+  "usdcAddress": "0x534b2f3A21130d7a60830c2Df862319e593943A3",
+  "baseURI": "ipfs://QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB/",
+  "deployedAt": "2026-02-14T06:41:49Z"
+}

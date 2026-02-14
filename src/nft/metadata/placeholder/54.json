@@ -1,0 +1,19 @@
+{
+  "name": "Ay Vitraya First Hundred - Unrevealed #54",
+  "description": "This NFT will be revealed soon. Part of the Ay Vitraya First Hundred collection.",
+  "image": "ipfs://QmYSK2JyM9qNw4aVDrr6Gx5bBVTv3VRkKNQbcyVB3HtKSg/placeholder.png",
+  "attributes": [
+    {
+      "trait_type": "Status",
+      "value": "Unrevealed"
+    },
+    {
+      "trait_type": "Collection",
+      "value": "Ay Vitraya First Hundred"
+    },
+    {
+      "trait_type": "Token ID",
+      "value": "54"
+    }
+  ]
+}

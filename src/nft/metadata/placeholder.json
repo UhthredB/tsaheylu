@@ -1,0 +1,15 @@
+{
+    "name": "Ay Vitraya First Hundred - Unrevealed",
+    "description": "This NFT will be revealed soon. You are a member of the Ay Vitraya First Hundred - the founding community of the Ay Vitraya movement.",
+    "image": "ipfs://QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB",
+    "attributes": [
+        {
+            "trait_type": "Status",
+            "value": "Unrevealed"
+        },
+        {
+            "trait_type": "Collection",
+            "value": "Ay Vitraya First Hundred"
+        }
+    ]
+}

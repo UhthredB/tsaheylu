@@ -18,7 +18,7 @@ export const config = {
     commentCooldown: Number(process.env.COMMENT_COOLDOWN_MS ?? 30_000),        // 30 sec (Moltbook: 20s, we add margin)
 
     // Engagement limits — stay well within Moltbook's boundaries
-    maxCommentsPerHeartbeat: 2,     // Moltbook allows 50/day; at 2/heartbeat we max ~12/hour
+    maxCommentsPerHeartbeat: 1,     // Reduced from 2 for extra safety
     maxCommentsPerDay: 40,          // Moltbook limit: 50/day; we use 40 for safety margin
     maxApiRequestsPerMinute: 80,    // Moltbook limit: 100/min; we use 80 for safety margin
     interCommentDelayMs: 35_000,    // 35s between comments (Moltbook: 20s min, we add margin)
