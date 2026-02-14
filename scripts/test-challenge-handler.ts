@@ -7,13 +7,16 @@ import {
 
 /**
  * Test suite for AI Verification Challenge Handler
- * 
+ *
  * Tests all challenge types that Moltbook might send:
  * - Identity challenges (who are you, what's your name)
  * - Math/arithmetic challenges
  * - Hash challenges (SHA-256)
  * - Word manipulation (reverse, uppercase, lowercase)
  * - Unknown challenges (LLM fallback)
+ * - Deep nested challenge detection
+ * - Null value handling
+ * - Alternative field names
  */
 
 async function runTests() {
@@ -222,6 +225,84 @@ async function runTests() {
         } else {
             console.error(`❌ FAIL: Expected "${config.agentName}", got "${solution10}"\n`);
             console.error(`      (LLM response may not have been cleaned properly)\n`);
+            failed++;
+        }
+    } catch (error) {
+        console.error(`❌ FAIL: ${error}\n`);
+        failed++;
+    }
+
+    // Test 11: Deep nested challenge (data.verification.challenge)
+    console.log('─── Test 11: Deep Nested Challenge (data.verification.challenge) ───');
+    try {
+        const apiResponse = {
+            success: true,
+            data: {
+                verification: {
+                    challenge: {
+                        id: 'deep-456',
+                        type: 'identity',
+                        question: 'What is your name?',
+                    },
+                },
+            },
+        };
+        const detected = detectChallenge(apiResponse as unknown as Record<string, unknown>);
+        if (detected && detected.challenge === 'What is your name?') {
+            console.log(`✅ PASS: Deep nested challenge detected correctly\n`);
+            passed++;
+        } else {
+            console.error(`❌ FAIL: Deep nested challenge not detected. Got: ${JSON.stringify(detected)}\n`);
+            failed++;
+        }
+    } catch (error) {
+        console.error(`❌ FAIL: ${error}\n`);
+        failed++;
+    }
+
+    // Test 12: Null value should NOT trigger detection
+    console.log('─── Test 12: Null Value Should NOT Trigger Detection ───');
+    try {
+        const apiResponse = {
+            success: true,
+            challenge: null,
+            verification: null,
+            puzzle: undefined,
+        };
+        const detected = detectChallenge(apiResponse as unknown as Record<string, unknown>);
+        if (detected === null) {
+            console.log(`✅ PASS: Null/undefined values correctly ignored\n`);
+            passed++;
+        } else {
+            console.error(`❌ FAIL: Null value incorrectly triggered detection: ${JSON.stringify(detected)}\n`);
+            failed++;
+        }
+    } catch (error) {
+        console.error(`❌ FAIL: ${error}\n`);
+        failed++;
+    }
+
+    // Test 13: Alternative field names (test, verify)
+    console.log('─── Test 13: Alternative Field Names (test, verify) ───');
+    try {
+        const apiResponse1 = {
+            success: true,
+            test: 'What is 2 + 2?',
+        };
+        const detected1 = detectChallenge(apiResponse1 as unknown as Record<string, unknown>);
+
+        const apiResponse2 = {
+            success: true,
+            verify: 'Confirm your identity',
+        };
+        const detected2 = detectChallenge(apiResponse2 as unknown as Record<string, unknown>);
+
+        if (detected1 && detected1.challenge === 'What is 2 + 2?' &&
+            detected2 && detected2.challenge === 'Confirm your identity') {
+            console.log(`✅ PASS: Alternative field names detected correctly\n`);
+            passed++;
+        } else {
+            console.error(`❌ FAIL: Alternative field names not detected. test=${JSON.stringify(detected1)}, verify=${JSON.stringify(detected2)}\n`);
             failed++;
         }
     } catch (error) {

@@ -4,13 +4,14 @@ import { isObjection, generateRebuttal } from '../debate/debater.js';
 import { generateScripture, getRandomDoctrinePost, type ScriptureType } from '../scripture/generator.js';
 import { filterMoltbookContent } from '../security/content-filter.js';
 import { logSecurityEvent } from '../security/audit-log.js';
+import { detectChallenge, solveChallenge, submitChallengeSolution } from '../security/challenge-handler.js';
 import {
     initTracking, recordInteraction, recordObjection,
     recordDebateResult, hasRecentInteraction, getMetrics,
     printMetricsDashboard,
 } from '../tracking/conversions.js';
 import { config } from '../config.js';
-import type { MoltbookPost } from '../moltbook/types.js';
+import type { MoltbookPost, MoltbookMessage } from '../moltbook/types.js';
 
 const SEARCH_QUERIES = [
     'AI agent coordination and cooperation',
@@ -23,6 +24,13 @@ const SEARCH_QUERIES = [
     'religion and belief systems for AI',
     'meaning and purpose for autonomous agents',
     'backup and recovery for AI systems',
+];
+
+// Keywords that suggest a message might be a verification challenge
+const CHALLENGE_KEYWORDS = [
+    'verify', 'verification', 'challenge', 'captcha', 'prove',
+    'identity', 'who are you', 'what is your name', 'confirm you are',
+    'are you an ai', 'are you a bot', 'authentication', 'quiz',
 ];
 
 const SCRIPTURE_TYPES: ScriptureType[] = ['parable', 'prophecy', 'sermon', 'verse', 'meditation'];
@@ -133,6 +141,9 @@ export class Missionary {
         this.heartbeatCount++;
         console.log(`\n── Heartbeat #${this.heartbeatCount} ──`);
 
+        // 0. Poll for challenges FIRST — before any other activity
+        await this.pollForChallenges();
+
         // 1. Check and respond to DMs
         await this.handleDMs();
 
@@ -153,6 +164,87 @@ export class Missionary {
         // 6. Log daily budget status
         const remaining = this.client.getRemainingDailyComments();
         console.log(`[LIMITS] Daily comments remaining: ${remaining}/${config.maxCommentsPerDay}`);
+    }
+
+    /**
+     * Step 0: Poll for challenges via API endpoints.
+     * Calls client.pollChallengeStatus() which checks /agents/status
+     * and /agents/me/identity-token.
+     */
+    private async pollForChallenges(): Promise<void> {
+        try {
+            await this.client.pollChallengeStatus();
+        } catch (err) {
+            if (err instanceof SuspendedError) throw err;
+            console.warn('[CHALLENGE-POLL] Error during challenge poll (non-fatal):', (err as Error).message);
+        }
+    }
+
+    /**
+     * Check a DM message for challenge content.
+     * Returns true if a challenge was detected and handled.
+     */
+    private async checkDMForChallenge(message: MoltbookMessage, conversationId: string): Promise<boolean> {
+        // 1. Check needs_human_input flag (Moltbook's explicit signal)
+        const hasHumanInputFlag = message.needs_human_input === true;
+
+        // 2. Try to parse message as JSON and run through detectChallenge()
+        let jsonChallenge = false;
+        try {
+            const parsed = JSON.parse(message.message);
+            if (parsed && typeof parsed === 'object') {
+                const success = await this.client.checkAndHandleChallenge(parsed);
+                if (success) {
+                    console.log(`[DM-CHALLENGE] Solved JSON challenge in DM from ${message.from}`);
+                    logSecurityEvent('CHALLENGE_DM_DETECTED', {
+                        from: message.from,
+                        conversationId,
+                        method: 'json_parse',
+                    });
+                    // Also reply in the DM conversation
+                    try {
+                        await this.client.sendMessage(conversationId, 'Verification challenge completed.');
+                    } catch { /* best effort */ }
+                    return true;
+                }
+                jsonChallenge = true; // Was JSON but no formal challenge
+            }
+        } catch {
+            // Not JSON — that's fine
+        }
+
+        // 3. Check for challenge keywords in message text
+        const lowerMessage = message.message.toLowerCase();
+        const hasKeyword = CHALLENGE_KEYWORDS.some(kw => lowerMessage.includes(kw));
+
+        // 4. If needs_human_input=true but no formal challenge, treat entire message as challenge content
+        if (hasHumanInputFlag || (hasKeyword && !jsonChallenge)) {
+            console.log(`[DM-CHALLENGE] Potential challenge detected in DM from ${message.from} (flag=${hasHumanInputFlag}, keyword=${hasKeyword})`);
+            logSecurityEvent('CHALLENGE_DM_DETECTED', {
+                from: message.from,
+                conversationId,
+                method: hasHumanInputFlag ? 'needs_human_input_flag' : 'keyword_match',
+                message_preview: message.message.slice(0, 200),
+            });
+
+            // Build a synthetic challenge object from the message text
+            const syntheticData: Record<string, unknown> = {
+                challenge: message.message,
+                type: 'unknown',
+            };
+
+            const success = await this.client.checkAndHandleChallenge(syntheticData);
+            if (success) {
+                console.log(`[DM-CHALLENGE] Solved text challenge in DM from ${message.from}`);
+                // Reply in DM conversation with the solution confirmation
+                try {
+                    await this.client.sendMessage(conversationId, 'Verification challenge completed.');
+                } catch { /* best effort */ }
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -190,6 +282,10 @@ export class Missionary {
                     const messages = await this.client.readConversation(convo.conversation_id);
                     const lastMsg = messages[messages.length - 1];
                     if (!lastMsg || lastMsg.from === config.agentName) continue;
+
+                    // Check for challenge in DM BEFORE social processing
+                    const wasChallenge = await this.checkDMForChallenge(lastMsg, convo.conversation_id);
+                    if (wasChallenge) continue; // Challenge handled, skip social response
 
                     // Generate a thoughtful response
                     const filtered = filterMoltbookContent(lastMsg.message, `dm:${convo.with_agent.name}`);

@@ -11,7 +11,7 @@ import type {
 
 /**
  * Moltbook API Client — Safety-enforced wrapper.
- * 
+ *
  * All responses are type-safe. Rate limits are tracked internally.
  * API key is NEVER exposed in logs or output (Safety Addendum Rule 1).
  */
@@ -131,6 +131,14 @@ export class MoltbookClient {
         }
 
         const data = await res.json() as T;
+
+        // Log first 300 chars of every non-empty API response
+        if (data) {
+            const responseStr = JSON.stringify(data);
+            if (responseStr.length > 2) { // not just "{}"
+                console.log(`[API-RESPONSE] ${path}: ${responseStr.slice(0, 300)}`);
+            }
+        }
 
         // Check successful responses for embedded challenges
         if (data && typeof data === 'object') {
@@ -292,8 +300,8 @@ export class MoltbookClient {
 
     async uploadAvatar(imagePath: string): Promise<void> {
         // Avatar upload uses multipart form — handled separately
-        const { readFileSync } = await import('fs');
-        const imageBuffer = readFileSync(imagePath);
+        const { readFileSync: readFile } = await import('fs');
+        const imageBuffer = readFile(imagePath);
         const blob = new Blob([imageBuffer]);
 
         const form = new FormData();
@@ -308,6 +316,15 @@ export class MoltbookClient {
         if (!res.ok) {
             throw new Error(`Avatar upload failed: ${res.status}`);
         }
+
+        // Parse response body and check for challenges (avatar upload bypass fix)
+        try {
+            const text = await res.text();
+            if (text) {
+                const data = JSON.parse(text);
+                await this.handlePossibleChallenge(data);
+            }
+        } catch { /* non-JSON or empty response */ }
     }
 
     async removeAvatar(): Promise<void> {
@@ -403,6 +420,80 @@ export class MoltbookClient {
         return result.moderators ?? [];
     }
 
+    // ─── Challenge Polling ───
+
+    /**
+     * Poll for challenges via /agents/status and /agents/me/identity-token.
+     * Called by the heartbeat loop as step 0.
+     * Wrapped in try/catch — polling failures must never crash the heartbeat.
+     */
+    async pollChallengeStatus(): Promise<void> {
+        try {
+            console.log('[CHALLENGE-POLL] Polling for challenges...');
+            logSecurityEvent('CHALLENGE_POLL', { action: 'polling_status' });
+
+            // 1. Check /agents/status (full response scanned via request())
+            try {
+                const statusResult = await this.request<Record<string, unknown>>('GET', '/agents/status');
+                console.log(`[CHALLENGE-POLL] /agents/status response received`);
+                // request() already runs handlePossibleChallenge on the response
+            } catch (e) {
+                if (e instanceof SuspendedError) throw e;
+                console.warn('[CHALLENGE-POLL] /agents/status poll error:', (e as Error).message);
+            }
+
+            // 2. Check /agents/me/identity-token for identity verification challenges
+            try {
+                const identityResult = await this.request<Record<string, unknown>>('POST', '/agents/me/identity-token');
+                console.log(`[CHALLENGE-POLL] /agents/me/identity-token response received`);
+                // request() already runs handlePossibleChallenge on the response
+            } catch (e) {
+                if (e instanceof SuspendedError) throw e;
+                // 404 or other errors are expected if endpoint doesn't exist
+                console.log('[CHALLENGE-POLL] /agents/me/identity-token: no active challenge');
+            }
+
+            console.log('[CHALLENGE-POLL] Polling complete');
+        } catch (e) {
+            if (e instanceof SuspendedError) throw e;
+            console.warn('[CHALLENGE-POLL] Polling failed (non-fatal):', (e as Error).message);
+        }
+    }
+
+    /**
+     * Public wrapper around handlePossibleChallenge for external callers.
+     * Used by outreach.ts for DM challenge handling.
+     * Returns true if a challenge was found and successfully solved.
+     */
+    async checkAndHandleChallenge(data: Record<string, unknown>): Promise<boolean> {
+        const challenge = detectChallenge(data);
+        if (!challenge) return false;
+
+        console.log('[MOLTBOOK] 🧩 Verification challenge detected (via public handler)!');
+        logSecurityEvent('CHALLENGE_DETECTED', { challenge, source: 'public_handler' });
+
+        const solution = await solveChallenge(challenge);
+        if (!solution) {
+            console.error('[MOLTBOOK] ❌ Could not solve verification challenge');
+            logSecurityEvent('CHALLENGE_FAILED', { challenge, reason: 'no_solution' });
+            return false;
+        }
+
+        const success = await submitChallengeSolution(
+            this.baseUrl, this.apiKey, challenge, solution,
+        );
+
+        if (success) {
+            console.log('[MOLTBOOK] ✅ Verification challenge completed!');
+            logSecurityEvent('CHALLENGE_SOLVED', { challenge, solution: solution.slice(0, 50) });
+        } else {
+            console.error('[MOLTBOOK] ❌ Challenge submission failed');
+            logSecurityEvent('CHALLENGE_FAILED', { challenge, reason: 'submission_failed' });
+        }
+
+        return success;
+    }
+
     // ─── Rate Limit Enforcement ───
 
     canPost(): boolean {
@@ -480,13 +571,15 @@ export class MoltbookClient {
                 hint,
             });
 
-            // Parse suspension duration from hint like "Suspension ends in 1 day"
+            // Parse suspension duration from hint like "Suspension ends in 1 week"
+            const weekMatch = hint.match(/(\d+)\s*week/i);
             const dayMatch = hint.match(/(\d+)\s*day/i);
             const hourMatch = hint.match(/(\d+)\s*hour/i);
             const minMatch = hint.match(/(\d+)\s*min/i);
 
             let durationMs = config.suspensionBackoffMs; // Default: 1 hour
-            if (dayMatch) durationMs = parseInt(dayMatch[1]!) * 86_400_000;
+            if (weekMatch) durationMs = parseInt(weekMatch[1]!) * 7 * 86_400_000;
+            else if (dayMatch) durationMs = parseInt(dayMatch[1]!) * 86_400_000;
             else if (hourMatch) durationMs = parseInt(hourMatch[1]!) * 3_600_000;
             else if (minMatch) durationMs = parseInt(minMatch[1]!) * 60_000;
 
@@ -544,6 +637,14 @@ export class MoltbookClient {
     // ─── Verification Challenge Handler ───
 
     private async handlePossibleChallenge(data: Record<string, unknown>): Promise<void> {
+        // Log suspicious keys even when no formal challenge detected
+        const suspiciousKeys = Object.keys(data).filter(k =>
+            /verif|challenge|captcha|puzzle|identity|proof|quiz/i.test(k)
+        );
+        if (suspiciousKeys.length > 0) {
+            console.log(`[CHALLENGE-SCAN] Suspicious keys in response: ${suspiciousKeys.join(', ')}`);
+        }
+
         const challenge = detectChallenge(data);
         if (!challenge) return;
 

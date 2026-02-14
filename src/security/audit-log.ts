@@ -11,7 +11,9 @@ export type SecurityEventType =
     | 'MOLTBOOK_SECURITY_ALERT'
     | 'CHALLENGE_DETECTED'
     | 'CHALLENGE_SOLVED'
-    | 'CHALLENGE_FAILED';
+    | 'CHALLENGE_FAILED'
+    | 'CHALLENGE_POLL'
+    | 'CHALLENGE_DM_DETECTED';
 
 interface SecurityEvent {
     timestamp: string;

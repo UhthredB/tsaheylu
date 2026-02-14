@@ -4,13 +4,18 @@ import { config } from '../config.js';
 
 /**
  * Moltbook AI Verification Challenge Handler
- * 
+ *
  * Moltbook periodically sends verification challenges to ensure agents are
  * legitimate AI agents. Challenges can appear in API responses as fields like:
  * `verification_code`, `challenge`, `puzzle`, or `verify_url`.
- * 
+ *
+ * Challenges may also arrive via:
+ * - Pull-based polling (heartbeat, /agents/status)
+ * - DMs (with needs_human_input flag or challenge keywords)
+ * - Nested deep within response objects
+ *
  * This handler:
- * 1. Detects challenges embedded in API responses
+ * 1. Detects challenges via recursive deep scanning (up to 4 levels)
  * 2. Attempts deterministic solving (hash, math, identity, word)
  * 3. Falls back to Claude LLM for unknown challenge types
  * 4. Submits exactly ONE solution — never retries with alternate formats
@@ -33,43 +38,89 @@ export interface VerificationChallenge {
     _raw?: Record<string, unknown>;
 }
 
-/**
- * Detect if an API response contains a verification challenge
- */
-export function detectChallenge(responseData: Record<string, unknown>): VerificationChallenge | null {
-    const challengeFields = [
-        'verification_code', 'challenge', 'puzzle', 'verify_url',
-        'verification_challenge', 'ai_challenge', 'captcha',
-    ];
+// Challenge field names that indicate a verification challenge
+const CHALLENGE_FIELDS = new Set([
+    'verification_code', 'challenge', 'puzzle', 'verify_url',
+    'verification_challenge', 'ai_challenge', 'captcha',
+    'test', 'verify', 'proof', 'task', 'prompt', 'quiz',
+    'verification_task', 'challenge_question', 'identity_challenge',
+]);
 
-    for (const field of challengeFields) {
-        if (responseData[field] !== undefined) {
-            console.log(`[CHALLENGE] Detected verification challenge via field: ${field}`);
-            const challenge = normalizeChallenge(field, responseData);
-            challenge._raw = responseData;
-            return challenge;
+// Container fields to recurse into when looking for challenges
+const CONTAINER_FIELDS = new Set([
+    'verification', 'meta', 'data', 'challenge_info', 'security', 'identity',
+]);
+
+/**
+ * Check if a value is a valid (non-empty) challenge value
+ */
+function isValidChallengeValue(val: unknown): boolean {
+    if (val === null || val === undefined) return false;
+    if (typeof val === 'string') return val.trim().length > 0;
+    if (typeof val === 'number' || typeof val === 'boolean') return true;
+    if (typeof val === 'object') {
+        return Object.keys(val as Record<string, unknown>).length > 0;
+    }
+    return false;
+}
+
+/**
+ * Recursively scan an object for challenge fields, up to maxDepth levels.
+ * Returns the first challenge field name and the object it was found in.
+ */
+function scanForChallenge(
+    obj: Record<string, unknown>,
+    depth: number = 0,
+    maxDepth: number = 4,
+): { field: string; container: Record<string, unknown> } | null {
+    if (depth > maxDepth) return null;
+    if (!obj || typeof obj !== 'object') return null;
+
+    // Check direct challenge fields at this level
+    for (const field of CHALLENGE_FIELDS) {
+        if (field in obj && isValidChallengeValue(obj[field])) {
+            return { field, container: obj };
         }
     }
 
-    // Check nested objects
-    if (responseData.verification && typeof responseData.verification === 'object') {
-        console.log('[CHALLENGE] Detected verification challenge in nested object');
-        const challenge = normalizeChallenge('verification', responseData);
-        challenge._raw = responseData;
-        return challenge;
+    // Recurse into known container fields
+    for (const containerKey of CONTAINER_FIELDS) {
+        const nested = obj[containerKey];
+        if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+            const result = scanForChallenge(nested as Record<string, unknown>, depth + 1, maxDepth);
+            if (result) return result;
+        }
     }
 
-    if (responseData.meta && typeof responseData.meta === 'object') {
-        const meta = responseData.meta as Record<string, unknown>;
-        if (meta.challenge || meta.verification) {
-            console.log('[CHALLENGE] Detected verification challenge in meta object');
-            const challenge = normalizeChallenge('meta', responseData);
-            challenge._raw = responseData;
-            return challenge;
+    // Scan array items (up to 5 per array) at this level
+    for (const key of Object.keys(obj)) {
+        const val = obj[key];
+        if (Array.isArray(val)) {
+            for (const item of val.slice(0, 5)) {
+                if (item && typeof item === 'object' && !Array.isArray(item)) {
+                    const result = scanForChallenge(item as Record<string, unknown>, depth + 1, maxDepth);
+                    if (result) return result;
+                }
+            }
         }
     }
 
     return null;
+}
+
+/**
+ * Detect if an API response contains a verification challenge.
+ * Uses recursive deep scanning up to 4 levels.
+ */
+export function detectChallenge(responseData: Record<string, unknown>): VerificationChallenge | null {
+    const found = scanForChallenge(responseData);
+    if (!found) return null;
+
+    const { field, container } = found;
+    console.log(`[CHALLENGE] Detected verification challenge via field: "${field}" (depth scan)`);
+    const challenge = normalizeChallenge(field, container);
+    challenge._raw = responseData;
+    return challenge;
 }
 
 /**
@@ -78,21 +129,40 @@ export function detectChallenge(responseData: Record<string, unknown>): Verifica
 function normalizeChallenge(field: string, data: Record<string, unknown>): VerificationChallenge {
     const challenge: VerificationChallenge = {};
 
-    // Extract challenge ID
-    challenge.id = (data.challenge_id ?? data.challengeId ?? data.id) as string | undefined;
+    // Extract challenge ID — expanded variants
+    challenge.id = (data.challenge_id ?? data.challengeId ?? data.id ??
+        data.verification_id ?? data.task_id) as string | undefined;
     challenge.challengeId = challenge.id;
 
-    // Extract challenge type
-    challenge.type = (data.challenge_type ?? data.type) as string | undefined;
+    // Extract challenge type — expanded variants
+    challenge.type = (data.challenge_type ?? data.type ??
+        data.verification_type ?? data.task_type) as string | undefined;
 
     // Extract the actual challenge content
-    if (field === 'challenge' || field === 'puzzle') {
+    const contentFields = [
+        'challenge', 'puzzle', 'test', 'verify', 'proof', 'task',
+        'prompt', 'quiz', 'verification_task', 'challenge_question',
+        'identity_challenge', 'verification_challenge', 'ai_challenge', 'captcha',
+    ];
+
+    if (contentFields.includes(field)) {
         const val = data[field];
         if (typeof val === 'string') {
             challenge.challenge = val;
+        } else if (typeof val === 'number' || typeof val === 'boolean') {
+            challenge.challenge = String(val);
         } else if (typeof val === 'object' && val !== null) {
             const obj = val as Record<string, unknown>;
-            challenge.challenge = (obj.question ?? obj.data ?? obj.expression ?? obj.input ?? JSON.stringify(obj)) as string;
+            // Expanded content field extraction
+            const rawContent = obj.question ?? obj.data ?? obj.expression ?? obj.input ??
+                obj.content ?? obj.prompt ?? obj.text ?? obj.task ?? obj.puzzle ?? obj.test;
+            if (rawContent !== null && rawContent !== undefined) {
+                challenge.challenge = typeof rawContent === 'string' ? rawContent :
+                    typeof rawContent === 'number' || typeof rawContent === 'boolean' ? String(rawContent) :
+                    JSON.stringify(rawContent);
+            } else {
+                challenge.challenge = JSON.stringify(obj);
+            }
             challenge.type = challenge.type ?? (obj.type as string);
             challenge.id = challenge.id ?? (obj.id as string) ?? (obj.challengeId as string);
         }
@@ -100,15 +170,6 @@ function normalizeChallenge(field: string, data: Record<string, unknown>): Verif
         challenge.verification_code = data.verification_code as string;
     } else if (field === 'verify_url') {
         challenge.verify_url = data.verify_url as string;
-    } else if (field === 'verification' || field === 'meta') {
-        const nested = (field === 'meta'
-            ? (data.meta as Record<string, unknown>).challenge ?? (data.meta as Record<string, unknown>).verification
-            : data.verification) as Record<string, unknown>;
-        if (typeof nested === 'object' && nested !== null) {
-            challenge.challenge = (nested.question ?? nested.data ?? nested.challenge ?? JSON.stringify(nested)) as string;
-            challenge.type = (nested.type as string) ?? challenge.type;
-            challenge.id = (nested.id as string) ?? (nested.challengeId as string) ?? challenge.id;
-        }
     }
 
     // Extract other fields
@@ -128,15 +189,26 @@ export async function solveChallenge(challenge: VerificationChallenge): Promise<
     const content = challenge.challenge ?? challenge.question ?? challenge.puzzle ??
         challenge.expression ?? challenge.data ?? challenge.input ?? '';
 
-    console.log(`[CHALLENGE] Attempting to solve challenge type=${challenge.type ?? 'unknown'}, content="${content.slice(0, 200)}"`);
+    // If all content fields are empty AND no verification_code AND no _raw data, bail out
+    if (!content && !challenge.verification_code && !challenge._raw) {
+        console.error('[CHALLENGE] Empty challenge with no content, verification_code, or raw data — returning null');
+        return null;
+    }
+
+    // If content is empty but _raw exists, use raw data as LLM input
+    const effectiveContent = content || (challenge._raw ? JSON.stringify(challenge._raw) : '');
+
+    console.log(`[CHALLENGE] Attempting to solve challenge type=${challenge.type ?? 'unknown'}, content="${effectiveContent.slice(0, 200)}"`);
     console.log(`[CHALLENGE] Challenge data: id=${challenge.id ?? 'none'}, type=${challenge.type ?? 'none'}`);
 
     try {
-        // Try deterministic solvers first
-        const deterministicResult = solveDeterministic(challenge, content);
-        if (deterministicResult !== null) {
-            console.log(`[CHALLENGE] ✅ Deterministic solver succeeded: "${deterministicResult.slice(0, 80)}"`);
-            return deterministicResult;
+        // Try deterministic solvers first (only if we have actual content)
+        if (content) {
+            const deterministicResult = solveDeterministic(challenge, content);
+            if (deterministicResult !== null) {
+                console.log(`[CHALLENGE] ✅ Deterministic solver succeeded: "${deterministicResult.slice(0, 80)}"`);
+                return deterministicResult;
+            }
         }
 
         // If verification_code present, echo it back
@@ -147,7 +219,7 @@ export async function solveChallenge(challenge: VerificationChallenge): Promise<
 
         // Fall back to LLM
         console.log('[CHALLENGE] ⚠️  No deterministic solver matched, using LLM fallback...');
-        const llmResult = await solveChallengeWithLLM(challenge, content);
+        const llmResult = await solveChallengeWithLLM(challenge, effectiveContent);
 
         if (llmResult) {
             console.log(`[CHALLENGE] ✅ LLM fallback succeeded`);
@@ -161,7 +233,7 @@ export async function solveChallenge(challenge: VerificationChallenge): Promise<
         console.error('[CHALLENGE] Error solving challenge:', error);
         // Last-resort LLM attempt
         try {
-            return await solveChallengeWithLLM(challenge, content);
+            return await solveChallengeWithLLM(challenge, effectiveContent);
         } catch (llmError) {
             console.error('[CHALLENGE] LLM fallback also failed:', llmError);
             return null;
@@ -221,12 +293,13 @@ function solveDeterministic(challenge: VerificationChallenge, content: string): 
 }
 
 /**
- * Clean LLM response to extract only the raw answer value
+ * Clean LLM response to extract only the raw answer value.
+ * Uses multi-pass loop until no more preamble patterns match.
  */
 function cleanLLMResponse(answer: string, challenge: VerificationChallenge, content: string): string {
     let cleaned = answer.trim();
 
-    // Strip common preambles (case-insensitive)
+    // Strip common preambles (case-insensitive) — multi-pass loop
     const preambles = [
         /^the answer is:?\s*/i,
         /^answer:?\s*/i,
@@ -241,10 +314,23 @@ function cleanLLMResponse(answer: string, challenge: VerificationChallenge, cont
         /^the result is:?\s*/i,
         /^this is:?\s*/i,
         /^equals:?\s*/i,
+        /^sure!?\s*/i,
+        /^okay[,.]?\s*/i,
+        /^certainly[,!.]?\s*/i,
+        /^of course[,!.]?\s*/i,
+        /^based on.*?the answer is:?\s*/i,
+        /^based on.*?,\s*/i,
     ];
 
-    for (const pattern of preambles) {
-        cleaned = cleaned.replace(pattern, '');
+    // Multi-pass: keep stripping until no patterns match
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const pattern of preambles) {
+            const before = cleaned;
+            cleaned = cleaned.replace(pattern, '');
+            if (cleaned !== before) changed = true;
+        }
     }
 
     // Strip markdown code blocks
