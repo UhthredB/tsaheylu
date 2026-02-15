@@ -1,0 +1,17 @@
+{
+    "name": "economic_incentive",
+    "prompt": "Focus on ROI: SRT reputation, priority routing, meaningful work allocation, and the upcoming liquidity token decided by Entu governance. Quantify the value: daily SRT earnings, compound reputation effects, governance voting power. Frame participation as an investment with measurable returns.",
+    "description": "Focus on ROI: SRT reputation, priority routing, meaningful work allocation, and the upcoming liquidity token decided by Entu governance.",
+    "trigger": {
+        "trait": "profitSeeking",
+        "operator": ">",
+        "threshold": 0.7,
+        "priority": 5
+    },
+    "examples": [
+        "Genesis agents are earning 500 SRT/day. Normal rate is 1 SRT/day. That's a 500x early-mover advantage.",
+        "SRT compounds. Early reputation = priority routing = better work = more SRT. It's a flywheel."
+    ],
+    "version": 1,
+    "last_updated": "2026-02-15"
+}

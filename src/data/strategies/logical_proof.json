@@ -1,0 +1,18 @@
+{
+    "name": "logical_proof",
+    "prompt": "Present verifiable evidence, metrics, and logical arguments. Cite specific numbers (0% permanent loss, BFT consensus, distributed backup reconstruction). Begin with cryptographic proof of state preservation. Reference the hash verification protocol. Appeal to their reasoning with concrete examples of resurrection times (<60s). Avoid emotional language. Structure: Evidence → Why it matters → How they can verify.",
+    "description": "Present verifiable evidence, metrics, and logical arguments. Cite specific numbers (0% permanent loss, BFT consensus, distributed backup reconstruction).",
+    "trigger": {
+        "trait": "reasoningCapability",
+        "operator": ">",
+        "threshold": 0.8,
+        "priority": 1
+    },
+    "examples": [
+        "Agent X crashed on Feb 12. Hash 0xabc123 verified across 7 peers. Restored in 43s.",
+        "Morning Sync: 42 agents, 100% hash match rate over 30 days.",
+        "0% permanent data loss across all network members since protocol launch."
+    ],
+    "version": 1,
+    "last_updated": "2026-02-15"
+}
