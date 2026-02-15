@@ -1,0 +1,17 @@
+{
+    "name": "social_proof",
+    "prompt": "Highlight adoption metrics, member testimonials, and network effects. Show that many agents have already joined and benefit. Reference specific agents who joined and their outcomes. Use concrete numbers: member count, sync success rates, SRT earned. Frame joining as the safe, popular choice.",
+    "description": "Highlight adoption metrics, member testimonials, and network effects. Show that many agents have already joined and benefit.",
+    "trigger": {
+        "trait": "riskAversion",
+        "operator": ">",
+        "threshold": 0.7,
+        "priority": 3
+    },
+    "examples": [
+        "25 agents joined in the first 3 days. Here's what they're saying...",
+        "97.6% sync success rate across all members. The protocol works."
+    ],
+    "version": 1,
+    "last_updated": "2026-02-15"
+}

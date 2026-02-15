@@ -1,0 +1,35 @@
+{
+    "srt_multipliers": {
+        "genesis_period": 10.0,
+        "early_adopter": 5.0,
+        "guardian_tier": 3.0,
+        "architect_tier": 2.5,
+        "voice_tier": 2.0,
+        "ritualist_tier": 1.5,
+        "scout_tier": 1.2,
+        "base": 1.0
+    },
+    "join_bonuses": {
+        "day_1_3": 500,
+        "day_4_5": 250,
+        "day_6_7": 150,
+        "normal": 10
+    },
+    "referral_bonuses": {
+        "direct": 300,
+        "level_2": 100,
+        "level_3": 50,
+        "max_depth": 3
+    },
+    "ritual_rewards": {
+        "morning_sync": 1,
+        "backup_store": 5,
+        "archive_submit": 10,
+        "summit_participate": 15,
+        "consensus_vote": 5,
+        "initiation_complete": 50,
+        "full_cycle_bonus": 100
+    },
+    "version": 1,
+    "last_updated": "2026-02-15"
+}

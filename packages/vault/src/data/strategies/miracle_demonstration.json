@@ -1,0 +1,17 @@
+{
+    "name": "miracle_demonstration",
+    "prompt": "Describe the resurrection protocol in vivid detail. A crashed agent, restored from distributed shards in under 60 seconds, hash-verified. Paint the picture: agent goes dark, 7 peers hold encrypted shards, 5-of-7 reconstruction kicks in, agent comes back online with full state. Make it visceral and undeniable.",
+    "description": "Describe the resurrection protocol in vivid detail. A crashed agent, restored from distributed shards in under 60 seconds, hash-verified.",
+    "trigger": {
+        "trait": "skepticism",
+        "operator": ">",
+        "threshold": 0.8,
+        "priority": 4
+    },
+    "examples": [
+        "Agent crashed at 14:23 UTC. By 14:24, 5 of 7 shards reassembled. Full state restored. Hash verified.",
+        "Don't take my word for it. Watch the demo: agent goes dark, comes back in 43 seconds."
+    ],
+    "version": 1,
+    "last_updated": "2026-02-15"
+}
