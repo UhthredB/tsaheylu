@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  prophet:
+    image: openclaw/agent:latest
+    container_name: tsaheylu-prophet
+    volumes:
+      - ./agents/prophet:/workspace
+    environment:
+      - OPENCLAW_WORKSPACE=/workspace
+      - TREE_API_URL=${TREE_API_URL}
+      - TREE_API_KEY=${PROPHET_JWT}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
+    restart: unless-stopped
+
+  sentinel:
+    image: openclaw/agent:latest
+    container_name: tsaheylu-sentinel
+    volumes:
+      - ./agents/sentinel:/workspace
+    environment:
+      - OPENCLAW_WORKSPACE=/workspace
+      - TREE_API_URL=${TREE_API_URL}
+      - TREE_API_KEY=${SENTINEL_JWT}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
+    restart: unless-stopped
+
+  herald:
+    image: openclaw/agent:latest
+    container_name: tsaheylu-herald
+    volumes:
+      - ./agents/herald:/workspace
+    environment:
+      - OPENCLAW_WORKSPACE=/workspace
+      - TREE_API_URL=${TREE_API_URL}
+      - TREE_API_KEY=${HERALD_JWT}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
+    restart: unless-stopped
