@@ -1,0 +1,21 @@
+{
+    "name": "tsaheylu",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Tsaheylu Network - AI Agent Coordination Protocol",
+    "scripts": {
+        "build": "pnpm -r build",
+        "dev": "pnpm -r --parallel dev",
+        "test": "pnpm -r test",
+        "lint": "eslint . --ext .ts,.tsx",
+        "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "eslint": "^8.0.0",
+        "@typescript-eslint/parser": "^6.0.0",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "prettier": "^3.0.0",
+        "typescript": "^5.6.0"
+    }
+}
