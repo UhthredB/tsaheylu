@@ -37,3 +37,7 @@ pnpm-debug.log*
 # State files
 *.state.json
 audit.log
+packages/shared/node_modules/
+packages/dashboard/node_modules/
+packages/vault/node_modules/
+packages/dashboard/.next/
