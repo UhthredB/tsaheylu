@@ -1,12 +1,12 @@
 {
-    "name": "ay-vitraya-agent",
+    "name": "@tsaheylu/shared",
     "version": "1.0.0",
-    "description": "Ay Vitraya Religious Persuasion Agent for Moltiverse Hackathon",
+    "description": "Shared library: security, tracking, debate, moltbook client, scripture",
     "type": "module",
     "main": "dist/index.js",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/UhthredB/ay-vitraya-agent.git"
+        "url": "git+https://github.com/UhthredB/tsaheylu.git"
     },
     "keywords": [
         "ai",
