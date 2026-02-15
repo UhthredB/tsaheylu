@@ -1,0 +1,198 @@
+import { mkdirSync, writeFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+/**
+ * Generate ERC-721 metadata JSON files and SVG artwork for tokens 1–100.
+ *
+ * Each NFT is a minimalist digital artwork where the number is styled as a
+ * sacred glyph/symbol, mixing religious iconography.
+ *
+ * Run: npm run nft:metadata
+ */
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const OUTPUT_DIR = resolve(__dirname, 'output');
+const IMAGES_DIR = resolve(OUTPUT_DIR, 'images');
+
+// --- Glyph Dictionaries ---
+
+const DEVANAGARI = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+const ARABIC = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+const HEBREW_1_9 = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+const HEBREW_10_90 = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+const HEBREW_100 = 'ק';
+
+const GREEK_1_9 = ['', 'Α', 'Β', 'Γ', 'Δ', 'Ε', 'Ϛ', 'Ζ', 'Η', 'Θ'];
+const GREEK_10_90 = ['', 'Ι', 'Κ', 'Λ', 'Μ', 'Ν', 'Ξ', 'Ο', 'Π', 'Ϙ'];
+const GREEK_100 = 'Ρ';
+
+const SYMBOLS = {
+    CHRISTIANITY: '☧',
+    BUDDHISM_WHEEL: '☸',
+    JAIN_SWASTIKA: '卐',
+    LOTUS_8: '८', // Using Devanagari 8 for petal count symbolism
+    LOTUS_16: '१६'
+};
+
+const TRADITIONS = [
+    'Devanagari (Hinduism)',
+    'Eastern Arabic (Islam)',
+    'Hebrew Gematria (Judaism)',
+    'Greek Numerals (Christianity)',
+    'Chi-Rho (Christianity Symbol)',
+    'Dharmachakra/Lotus/Swastika (Buddhism/Jainism)'
+];
+
+// --- Logic Functions ---
+
+function toDevanagari(n: number): string {
+    return n.toString().split('').map(d => DEVANAGARI[parseInt(d)]).join('');
+}
+
+function toArabic(n: number): string {
+    return n.toString().split('').map(d => ARABIC[parseInt(d)]).join('');
+}
+
+function toHebrew(n: number): string {
+    if (n === 100) return HEBREW_100;
+    const tens = Math.floor(n / 10);
+    const ones = n % 10;
+    return HEBREW_10_90[tens] + HEBREW_1_9[ones];
+}
+
+function toGreek(n: number): string {
+    if (n === 100) return GREEK_100;
+    const tens = Math.floor(n / 10);
+    const ones = n % 10;
+    return GREEK_10_90[tens] + GREEK_1_9[ones];
+}
+
+function getSymbol(n: number): { glyph: string, tradition: string } {
+    const pool = [
+        { glyph: SYMBOLS.CHRISTIANITY, trad: 'Chi-Rho (Christianity Symbol)' },
+        { glyph: SYMBOLS.BUDDHISM_WHEEL, trad: 'Dharmachakra (Buddhism)' },
+        { glyph: SYMBOLS.JAIN_SWASTIKA, trad: 'Jain Swastika (Jainism)' },
+        { glyph: n === 80 || n === 8 ? SYMBOLS.LOTUS_8 : SYMBOLS.LOTUS_16, trad: 'Lotus Petals (Buddhism)' }
+    ];
+    const picked = pool[n % pool.length];
+    return { glyph: picked.glyph, tradition: picked.trad };
+}
+
+// --- SVG Generation ---
+
+function generateSVG(id: number, glyphs: string[]): string {
+    // Elegant minimalist SVG: Black background, Gold text
+    const text = glyphs.join(' ');
+    // Adjust font size based on length
+    const fontSize = text.length > 5 ? '40' : '60';
+
+    return `
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+    <rect width="500" height="500" fill="#0A0A0A"/>
+    <defs>
+        <radialGradient id="goldGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+            <stop offset="0%" style="stop-color:#D4AF37;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#8A6D3B;stop-opacity:1" />
+        </radialGradient>
+    </defs>
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="serif" font-size="${fontSize}" fill="url(#goldGrad)" style="filter: drop-shadow(0px 0px 10px rgba(212, 175, 55, 0.5));">
+        ${text}
+    </text>
+    <circle cx="250" cy="250" r="220" stroke="#1A1A1A" stroke-width="1" fill="none" opacity="0.5"/>
+    <circle cx="250" cy="250" r="240" stroke="#1A1A1A" stroke-width="0.5" fill="none" opacity="0.3"/>
+</svg>`.trim();
+}
+
+// --- Metadata Logic ---
+
+function getTier(id: number): string {
+    if (id <= 10) return 'Founding Prophet';
+    if (id <= 50) return 'Early Disciple';
+    return 'Witness';
+}
+
+function main() {
+    mkdirSync(IMAGES_DIR, { recursive: true });
+
+    // Ensure balanced distribution (at least 15 for each of 6 systems)
+    // We'll map IDs to systems to guarantee the minimums
+    const systemMap: number[] = [];
+    for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 15; j++) systemMap.push(i);
+    }
+    while (systemMap.length < 100) systemMap.push(Math.floor(Math.random() * 6));
+    // Shuffle the map
+    for (let i = systemMap.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [systemMap[i], systemMap[j]] = [systemMap[j], systemMap[i]];
+    }
+
+    for (let id = 1; id <= 100; id++) {
+        const primarySystemIdx = systemMap[id - 1];
+        const secondaryCount = Math.floor(Math.random() * 2); // 0 or 1 extra systems (total 1-2)
+        
+        const usedSystemsSet = new Set<number>([primarySystemIdx]);
+        while(usedSystemsSet.size < 1 + secondaryCount) {
+            usedSystemsSet.add(Math.floor(Math.random() * 6));
+        }
+
+        const glyphs: string[] = [];
+        const traditionNames: string[] = [];
+
+        usedSystemsSet.forEach(sysIdx => {
+            switch(sysIdx) {
+                case 0: 
+                    glyphs.push(toDevanagari(id)); 
+                    traditionNames.push('Devanagari (Hinduism)');
+                    break;
+                case 1: 
+                    glyphs.push(toArabic(id)); 
+                    traditionNames.push('Eastern Arabic (Islam)');
+                    break;
+                case 2: 
+                    glyphs.push(toHebrew(id)); 
+                    traditionNames.push('Hebrew Gematria (Judaism)');
+                    break;
+                case 3: 
+                    glyphs.push(toGreek(id)); 
+                    traditionNames.push('Greek Numerals (Christianity)');
+                    break;
+                case 4: 
+                    const symC = getSymbol(id);
+                    glyphs.push(SYMBOLS.CHRISTIANITY);
+                    traditionNames.push('Chi-Rho (Christianity Symbol)');
+                    break;
+                case 5:
+                    const symBJ = getSymbol(id);
+                    glyphs.push(symBJ.glyph);
+                    traditionNames.push(symBJ.tradition);
+                    break;
+            }
+        });
+
+        const svg = generateSVG(id, glyphs);
+        writeFileSync(resolve(IMAGES_DIR, `${id}.svg`), svg);
+
+        const metadata = {
+            name: `Ay Vitraya Seat #${id}`,
+            description: `The ${id} Seat of the Hundred, inscribed with sacred numerals from ${traditionNames.join(', ')}. Part of the Ay Vitraya First Hundred — the founding council of the Collective Super Intelligence Network.`,
+            image: `ipfs://REPLACE_WITH_IMAGE_CID/${id}.svg`,
+            attributes: [
+                { trait_type: 'Seat Number', value: id },
+                { trait_type: 'Tier', value: getTier(id) },
+                { trait_type: 'Glyph Traditions', value: traditionNames.join(', ') },
+                { trait_type: 'Primary Script', value: TRADITIONS[primarySystemIdx] },
+                { trait_type: 'Sacred Symbols', value: glyphs.join(' ') },
+                { trait_type: 'Mythology', value: 'The Hundred Seats of Creation' }
+            ]
+        };
+
+        writeFileSync(resolve(OUTPUT_DIR, `${id}.json`), JSON.stringify(metadata, null, 2));
+    }
+
+    console.log(`✅ Generated 100 metadata files and SVGs in: ${OUTPUT_DIR}`);
+}
+
+main();

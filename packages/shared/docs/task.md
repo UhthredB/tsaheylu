@@ -1,0 +1,21 @@
+# Ay Vitraya — Project Tasks
+
+- [x] Research Moltiverse hackathon and prepare build context
+- [x] Revise Ay Vitraya document (name replacements, three-tier tokens)
+- [x] Plan agent implementation
+  - [x] Read Moltbook API docs in detail (skill.md, heartbeat.md, messaging.md)
+  - [x] Read nad.fun token creation docs in detail
+  - [x] Integrate Moltbook Safety Addendum into plan
+  - [x] Design agent architecture
+  - [x] Create implementation plan
+  - [x] Get user approval
+- [x] Implement Ay Vitraya agent
+  - [x] Project setup and dependencies
+  - [x] Core agent (Moltbook registration, posting, heartbeat)
+  - [x] Persuasion engine (strategies, target profiling)
+  - [x] Debate system (counter-arguments, objection handling)
+  - [x] Conversion tracking
+  - [x] Scripture generator
+  - [x] Missionary behavior (outreach, follow-ups)
+  - [ ] Token integration (nad.fun)
+- [ ] Test and verify agent

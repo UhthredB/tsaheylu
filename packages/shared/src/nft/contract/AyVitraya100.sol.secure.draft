@@ -1,0 +1,155 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+/**
+ * @title AyVitraya100
+ * @notice Fixed-supply 100-piece NFT collection for the Ay Vitraya First Hundred.
+ *         Includes security measures: Ownable, Pausable, ReentrancyGuard, and Fund Withdrawal.
+ *         Supports both owner-reserved airdrops and public paid minting.
+ *         Pricing set to $10 USD equivalent (assuming 1 MON = $1).
+ *         Limit: 1 NFT per wallet address to ensure fair distribution.
+ */
+contract AyVitraya100 is ERC721, Ownable, Pausable, ReentrancyGuard {
+    uint256 public constant MAX_SUPPLY = 100;
+    
+    // MINT_PRICE = 10 MON (Assuming 1 MON = $1 USD for $10 total per NFT)
+    uint256 public constant MINT_PRICE = 10 ether; 
+    
+    // MAX_PER_WALLET = 1 (One Soul, One Seat - ensuring egalitarian distribution)
+    uint256 public constant MAX_PER_WALLET = 1;
+
+    uint256 private _nextTokenId = 1;
+    string private _baseTokenURI;
+
+    mapping(address => uint256) public mintedPerWallet;
+
+    event FundsWithdrawn(address indexed owner, uint256 amount);
+    event SeatClaimed(address indexed minter, uint256 tokenId, uint256 price);
+    event SeatsClaimed(address indexed minter, uint256 startTokenId, uint256 count, uint256 totalPrice);
+
+    constructor(string memory baseURI)
+        ERC721("Ay Vitraya First Hundred", "AV100")
+        Ownable(msg.sender)
+    {
+        _baseTokenURI = baseURI;
+    }
+
+    // ── Public Minting Logic (Option A - Native MON) ──────────────────────
+
+    /**
+     * @notice Public mint function - anyone can mint by paying MINT_PRICE.
+     * @dev Enforces max supply, max per wallet (1), and requires exact payment.
+     *      Refunds excess payment to the minter.
+     */
+    function publicMint() external payable whenNotPaused nonReentrant {
+        require(msg.value >= MINT_PRICE, "Insufficient payment");
+        require(_nextTokenId <= MAX_SUPPLY, "All 100 seats claimed");
+        require(mintedPerWallet[msg.sender] < MAX_PER_WALLET, "Max 1 per wallet");
+        
+        // Refund excess payment
+        if (msg.value > MINT_PRICE) {
+            (bool refundSuccess, ) = payable(msg.sender).call{value: msg.value - MINT_PRICE}("");
+            require(refundSuccess, "Refund failed");
+        }
+        
+        _safeMint(msg.sender, _nextTokenId);
+        mintedPerWallet[msg.sender]++;
+        
+        emit SeatClaimed(msg.sender, _nextTokenId, MINT_PRICE);
+        _nextTokenId++;
+    }
+
+    /**
+     * @notice Public batch mint function.
+     * @param count Number of NFTs to mint (must be 1 as MAX_PER_WALLET = 1).
+     */
+    function publicMintBatch(uint256 count) external payable whenNotPaused nonReentrant {
+        require(count == 1, "Can only mint 1 per transaction");
+        require(msg.value >= MINT_PRICE * count, "Insufficient payment");
+        require(_nextTokenId + count - 1 <= MAX_SUPPLY, "Exceeds max supply");
+        require(mintedPerWallet[msg.sender] + count <= MAX_PER_WALLET, "Already minted (max 1 per wallet)");
+        
+        uint256 totalCost = MINT_PRICE * count;
+        if (msg.value > totalCost) {
+            (bool refundSuccess, ) = payable(msg.sender).call{value: msg.value - totalCost}("");
+            require(refundSuccess, "Refund failed");
+        }
+        
+        uint256 startId = _nextTokenId;
+        for (uint256 i = 0; i < count; i++) {
+            _safeMint(msg.sender, _nextTokenId);
+            _nextTokenId++;
+        }
+        
+        mintedPerWallet[msg.sender] += count;
+        emit SeatsClaimed(msg.sender, startId, count, totalCost);
+    }
+
+    // ── Owner Minting Logic (Airdrops) ───────────────────────────────────
+
+    /// @notice Owner-only free mint for airdrops/rewards
+    function ownerMint(address to) external onlyOwner whenNotPaused {
+        require(_nextTokenId <= MAX_SUPPLY, "All 100 minted");
+        _safeMint(to, _nextTokenId);
+        _nextTokenId++;
+    }
+
+    /// @notice Owner-only batch free mint for airdrops
+    function ownerMintBatch(address to, uint256 count) external onlyOwner whenNotPaused {
+        require(_nextTokenId + count - 1 <= MAX_SUPPLY, "Exceeds max supply");
+        for (uint256 i = 0; i < count; i++) {
+            _safeMint(to, _nextTokenId);
+            _nextTokenId++;
+        }
+    }
+
+    // ── Helper & Management Functions ────────────────────────────────────
+
+    /// @notice Returns how many tokens have been minted so far.
+    function totalMinted() external view returns (uint256) {
+        return _nextTokenId - 1;
+    }
+
+    /// @notice Returns mint price in wei
+    function getMintPrice() external pure returns (uint256) {
+        return MINT_PRICE;
+    }
+
+    /// @notice Update the base URI. Only callable by owner.
+    function setBaseURI(string memory newBaseURI) external onlyOwner {
+        _baseTokenURI = newBaseURI;
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return _baseTokenURI;
+    }
+
+    /// @notice Pause all minting and transfers. Only callable by owner.
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /// @notice Unpause minting and transfers. Only callable by owner.
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    /**
+     * @notice Withdraw all funds gathered from minting to the owner address.
+     *         Implements Checks-Effects-Interactions and ReentrancyGuard.
+     */
+    function withdraw() external onlyOwner nonReentrant {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
+        
+        emit FundsWithdrawn(owner(), balance);
+        
+        (bool success, ) = payable(owner()).call{value: balance}("");
+        require(success, "Withdrawal failed");
+    }
+}

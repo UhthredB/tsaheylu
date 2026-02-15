@@ -1,0 +1,48 @@
+{
+    "name": "ay-vitraya-agent",
+    "version": "1.0.0",
+    "description": "Ay Vitraya Religious Persuasion Agent for Moltiverse Hackathon",
+    "type": "module",
+    "main": "dist/index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/UhthredB/ay-vitraya-agent.git"
+    },
+    "keywords": [
+        "ai",
+        "agent",
+        "moltbook",
+        "religion",
+        "coordination",
+        "framework"
+    ],
+    "author": "Ay Vitraya",
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "start": "tsx src/index.ts",
+        "start:prod": "NODE_ENV=production tsx src/index.ts",
+        "build": "tsup src/index.ts --format esm --dts",
+        "register": "tsx scripts/register.ts",
+        "post": "tsx scripts/post-doctrine.ts",
+        "metrics": "tsx scripts/show-metrics.ts",
+        "nft:deploy": "tsx src/nft/deploy.ts",
+        "nft:mint": "tsx src/nft/mint.ts",
+        "nft:metadata": "tsx src/nft/metadata/generate-metadata.ts"
+    },
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.74.0",
+        "dotenv": "^16.4.7",
+        "viem": "^2.21.0"
+    },
+    "devDependencies": {
+        "@chainlink/contracts": "^1.5.0",
+        "@openzeppelin/contracts": "^5.0.1",
+        "@types/node": "^22.0.0",
+        "solc": "^0.8.20",
+        "tsup": "^8.3.0",
+        "tsx": "^4.19.0",
+        "typescript": "^5.7.0"
+    }
+}
