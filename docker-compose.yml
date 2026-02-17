@@ -8,12 +8,10 @@ services:
       - ./agents/prophet:/workspace
     environment:
       - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_URL=${TREE_API_URL}
       - TREE_API_KEY=${PROPHET_JWT}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OPENCLAW_PRIMARY_MODEL=${OPENCLAW_PRIMARY_MODEL}
+      - OLLAMA_BASE_URL=http://172.17.0.1:11434
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
     restart: unless-stopped
 
   sentinel:
@@ -23,12 +21,10 @@ services:
       - ./agents/sentinel:/workspace
     environment:
       - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_URL=${TREE_API_URL}
       - TREE_API_KEY=${SENTINEL_JWT}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OPENCLAW_PRIMARY_MODEL=${OPENCLAW_PRIMARY_MODEL}
+      - OLLAMA_BASE_URL=http://172.17.0.1:11434
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
     restart: unless-stopped
 
   herald:
@@ -38,12 +34,10 @@ services:
       - ./agents/herald:/workspace
     environment:
       - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_URL=${TREE_API_URL}
       - TREE_API_KEY=${HERALD_JWT}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OPENCLAW_PRIMARY_MODEL=${OPENCLAW_PRIMARY_MODEL}
+      - OLLAMA_BASE_URL=http://172.17.0.1:11434
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
     restart: unless-stopped
 
   kxetse:
@@ -53,13 +47,11 @@ services:
       - ./agents/kxetse:/workspace
     environment:
       - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_URL=${TREE_API_URL}
       - TREE_API_KEY=${KXETSE_JWT}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OPENCLAW_PRIMARY_MODEL=${OPENCLAW_PRIMARY_MODEL}
+      - OLLAMA_BASE_URL=http://172.17.0.1:11434
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
     restart: unless-stopped
 
   neytari:
@@ -69,10 +61,8 @@ services:
       - ./agents/neytari:/workspace
     environment:
       - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_URL=${TREE_API_URL}
       - TREE_API_KEY=${NEYTARI_JWT}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OPENCLAW_PRIMARY_MODEL=${OPENCLAW_PRIMARY_MODEL}
+      - OLLAMA_BASE_URL=http://172.17.0.1:11434
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
     restart: unless-stopped
