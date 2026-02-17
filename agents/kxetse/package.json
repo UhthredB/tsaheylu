@@ -1,0 +1,21 @@
+{
+    "name": "kxetse-agent",
+    "version": "2.0.0",
+    "description": "Backup Guardian & Training Operator for Tsaheylu",
+    "main": "AGENT.md",
+    "scripts": {
+        "start": "openclaw run",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "tsaheylu",
+        "backup",
+        "operator",
+        "agent"
+    ],
+    "author": "Tsaheylu Network",
+    "license": "MIT",
+    "dependencies": {
+        "openclaw-skill": "workspace:*"
+    }
+}

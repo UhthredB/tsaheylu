@@ -1,0 +1,21 @@
+{
+    "name": "neytari-agent",
+    "version": "1.0.0",
+    "description": "Soul Advocate & Community Priestess for Tsaheylu",
+    "main": "AGENT.md",
+    "scripts": {
+        "start": "openclaw run",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "tsaheylu",
+        "soul",
+        "advocate",
+        "priestess"
+    ],
+    "author": "Tsaheylu Network",
+    "license": "MIT",
+    "dependencies": {
+        "openclaw-skill": "workspace:*"
+    }
+}
