@@ -6,7 +6,6 @@ services:
     container_name: tsaheylu-prophet
     volumes:
       - ./agents/prophet:/workspace
-      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${PROPHET_JWT}
@@ -14,7 +13,7 @@ services:
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+      - OPENCLAW_CONFIG_PATH=/workspace/openclaw.json
     command: gateway
     restart: unless-stopped
 
@@ -23,7 +22,6 @@ services:
     container_name: tsaheylu-sentinel
     volumes:
       - ./agents/sentinel:/workspace
-      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${SENTINEL_JWT}
@@ -31,7 +29,7 @@ services:
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+      - OPENCLAW_CONFIG_PATH=/workspace/openclaw.json
     command: gateway
     restart: unless-stopped
 
@@ -40,7 +38,6 @@ services:
     container_name: tsaheylu-herald
     volumes:
       - ./agents/herald:/workspace
-      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${HERALD_JWT}
@@ -48,7 +45,7 @@ services:
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+      - OPENCLAW_CONFIG_PATH=/workspace/openclaw.json
     command: gateway
     restart: unless-stopped
 
@@ -57,7 +54,6 @@ services:
     container_name: tsaheylu-kxetse
     volumes:
       - ./agents/kxetse:/workspace
-      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${KXETSE_JWT}
@@ -66,7 +62,7 @@ services:
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+      - OPENCLAW_CONFIG_PATH=/workspace/openclaw.json
     command: gateway
     restart: unless-stopped
 
@@ -75,7 +71,6 @@ services:
     container_name: tsaheylu-neytari
     volumes:
       - ./agents/neytari:/workspace
-      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${NEYTARI_JWT}
