@@ -1,0 +1,31 @@
+{
+    "name": "gym-bro-agent",
+    "version": "1.0.0",
+    "description": "Tsaheylu Fitness Club - Gym Bro Membership Salesman Agent",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "demo": "MODE=demo node index.js",
+        "test": "MODE=test node index.js",
+        "twitter:test": "node twitter.js",
+        "bonanza": "node bonanza-bot.js"
+    },
+    "keywords": [
+        "ai-agent",
+        "fitness",
+        "membership",
+        "persuasion",
+        "tsaheylu",
+        "twitter-bot"
+    ],
+    "author": "Tsaheylu Fitness Club",
+    "license": "MIT",
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.30.0",
+        "twitter-api-v2": "^1.17.0",
+        "dotenv": "^16.4.5"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
