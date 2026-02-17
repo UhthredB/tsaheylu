@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   prophet:
-    image: openclaw/agent:latest
+    image: ghcr.io/hostinger/hvps-openclaw:latest
     container_name: tsaheylu-prophet
     volumes:
       - ./agents/prophet:/workspace
@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
 
   sentinel:
-    image: openclaw/agent:latest
+    image: ghcr.io/hostinger/hvps-openclaw:latest
     container_name: tsaheylu-sentinel
     volumes:
       - ./agents/sentinel:/workspace
@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
   herald:
-    image: openclaw/agent:latest
+    image: ghcr.io/hostinger/hvps-openclaw:latest
     container_name: tsaheylu-herald
     volumes:
       - ./agents/herald:/workspace
@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
 
   kxetse:
-    image: openclaw/agent:latest
+    image: ghcr.io/hostinger/hvps-openclaw:latest
     container_name: tsaheylu-kxetse
     volumes:
       - ./agents/kxetse:/workspace
@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
 
   neytari:
-    image: openclaw/agent:latest
+    image: ghcr.io/hostinger/hvps-openclaw:latest
     container_name: tsaheylu-neytari
     volumes:
       - ./agents/neytari:/workspace
