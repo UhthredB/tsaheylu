@@ -13,7 +13,9 @@ services:
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+    command: gateway
     restart: unless-stopped
 
   sentinel:
@@ -28,7 +30,9 @@ services:
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+    command: gateway
     restart: unless-stopped
 
   herald:
@@ -43,7 +47,9 @@ services:
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+    command: gateway
     restart: unless-stopped
 
   kxetse:
@@ -59,7 +65,9 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
       - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
+    command: gateway
     restart: unless-stopped
 
   neytari:
