@@ -12,6 +12,8 @@ services:
       - TREE_API_KEY=${PROPHET_JWT}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
+      - MODEL_ID=${MODEL_ID}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
     restart: unless-stopped
 
   sentinel:
@@ -25,6 +27,8 @@ services:
       - TREE_API_KEY=${SENTINEL_JWT}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
+      - MODEL_ID=${MODEL_ID}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
     restart: unless-stopped
 
   herald:
@@ -38,6 +42,8 @@ services:
       - TREE_API_KEY=${HERALD_JWT}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
+      - MODEL_ID=${MODEL_ID}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
     restart: unless-stopped
 
   kxetse:
@@ -52,6 +58,8 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - MODEL_ID=${MODEL_ID}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
     restart: unless-stopped
 
   neytari:
@@ -65,4 +73,6 @@ services:
       - TREE_API_KEY=${NEYTARI_JWT}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
+      - MODEL_ID=${MODEL_ID}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
     restart: unless-stopped
