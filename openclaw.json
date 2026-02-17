@@ -1,0 +1,19 @@
+{
+    "logging": {
+        "level": "info"
+    },
+    "models": {
+        "providers": {
+            "ollama": {
+                "baseUrl": "http://172.17.0.1:11434"
+            }
+        }
+    },
+    "agents": {
+        "defaults": {
+            "model": {
+                "primary": "ollama/llama3"
+            }
+        }
+    }
+}

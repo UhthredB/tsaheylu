@@ -6,12 +6,14 @@ services:
     container_name: tsaheylu-prophet
     volumes:
       - ./agents/prophet:/workspace
+      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${PROPHET_JWT}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
     restart: unless-stopped
 
   sentinel:
@@ -19,12 +21,14 @@ services:
     container_name: tsaheylu-sentinel
     volumes:
       - ./agents/sentinel:/workspace
+      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${SENTINEL_JWT}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
     restart: unless-stopped
 
   herald:
@@ -32,12 +36,14 @@ services:
     container_name: tsaheylu-herald
     volumes:
       - ./agents/herald:/workspace
+      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${HERALD_JWT}
       - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
     restart: unless-stopped
 
   kxetse:
@@ -45,6 +51,7 @@ services:
     container_name: tsaheylu-kxetse
     volumes:
       - ./agents/kxetse:/workspace
+      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${KXETSE_JWT}
@@ -52,6 +59,7 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - OLLAMA_BASE_URL=http://172.17.0.1:11434
       - OPENCLAW_PRIMARY_MODEL=ollama/llama3
+      - OPENCLAW_CONFIG_PATH=/workspace/manual_config.json
     restart: unless-stopped
 
   neytari:
@@ -59,6 +67,7 @@ services:
     container_name: tsaheylu-neytari
     volumes:
       - ./agents/neytari:/workspace
+      - ./openclaw.json:/workspace/manual_config.json
     environment:
       - OPENCLAW_WORKSPACE=/workspace
       - TREE_API_KEY=${NEYTARI_JWT}
