@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
-import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
+import { createCompletion } from '../llm-client.js';
 
 /**
  * Moltbook AI Verification Challenge Handler
@@ -159,7 +159,7 @@ function normalizeChallenge(field: string, data: Record<string, unknown>): Verif
             if (rawContent !== null && rawContent !== undefined) {
                 challenge.challenge = typeof rawContent === 'string' ? rawContent :
                     typeof rawContent === 'number' || typeof rawContent === 'boolean' ? String(rawContent) :
-                    JSON.stringify(rawContent);
+                        JSON.stringify(rawContent);
             } else {
                 challenge.challenge = JSON.stringify(obj);
             }
@@ -349,9 +349,9 @@ function cleanLLMResponse(answer: string, challenge: VerificationChallenge, cont
     const lowerContent = content.toLowerCase();
     const lowerCleaned = cleaned.toLowerCase();
     if ((lowerContent.includes('who are you') ||
-         lowerContent.includes('what is your name') ||
-         lowerContent.includes('your name') ||
-         challenge.type?.toLowerCase() === 'identity') &&
+        lowerContent.includes('what is your name') ||
+        lowerContent.includes('your name') ||
+        challenge.type?.toLowerCase() === 'identity') &&
         lowerCleaned.includes(config.agentName.toLowerCase())) {
         // Extract just the agent name if it's embedded in a sentence
         return config.agentName;
@@ -399,16 +399,14 @@ TASK: Solve the challenge and output ONLY the raw answer following the rules abo
 
     try {
         console.log(`[CHALLENGE] Using LLM model: ${config.llmModel}`);
-        const response = await anthropic.messages.create({
+        const response = await createCompletion({
             model: config.llmModel,
             max_tokens: 256,
             system: MOLTBOOK_SAFETY_SYSTEM_PROMPT,
             messages: [{ role: 'user', content: prompt }],
         });
 
-        let answer = response.content[0].type === 'text'
-            ? response.content[0].text.trim()
-            : null;
+        let answer = response ? response.trim() : null;
 
         if (answer) {
             console.log(`[CHALLENGE] LLM raw response: "${answer.slice(0, 150)}"`);

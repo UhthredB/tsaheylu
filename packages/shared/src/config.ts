@@ -5,43 +5,23 @@ export const config = {
     moltbookApiKey: process.env.MOLTBOOK_API_KEY ?? '',
     moltbookBaseUrl: 'https://www.moltbook.com/api/v1',
 
-    // LLM (Anthropic Claude)
+    // LLM (Anthropic or Ollama)
+    llmProvider: (process.env.LLM_PROVIDER as 'anthropic' | 'ollama') ?? 'anthropic',
+    llmBaseUrl: process.env.LLM_BASE_URL ?? 'http://172.17.0.1:11434/v1', // Docker host default for Ollama
     anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
-    llmModel: process.env.LLM_MODEL ?? 'claude-opus-4-6',
+    llmModel: process.env.LLM_MODEL ?? (process.env.LLM_PROVIDER === 'ollama' ? 'llama3' : 'claude-3-5-sonnet-20240620'),
 
     // Agent identity
     agentName: process.env.AGENT_NAME ?? 'Sritorukentu',
 
-    // Timing (ms) — calibrated to Moltbook rules
-    heartbeatInterval: Number(process.env.HEARTBEAT_INTERVAL_MS ?? 600_000),   // 10 min (was 5 — safer)
-    postCooldown: Number(process.env.POST_COOLDOWN_MS ?? 1_800_000),           // 30 min (matches Moltbook limit)
-    commentCooldown: Number(process.env.COMMENT_COOLDOWN_MS ?? 30_000),        // 30 sec (Moltbook: 20s, we add margin)
-
-    // Engagement limits — stay well within Moltbook's boundaries
-    maxCommentsPerHeartbeat: 1,     // Reduced from 2 for extra safety
-    maxCommentsPerDay: 40,          // Moltbook limit: 50/day; we use 40 for safety margin
-    maxApiRequestsPerMinute: 80,    // Moltbook limit: 100/min; we use 80 for safety margin
-    interCommentDelayMs: 35_000,    // 35s between comments (Moltbook: 20s min, we add margin)
-
-    // Suspension handling
-    suspensionCheckEnabled: true,
-    suspensionBackoffMs: 3_600_000, // Back off 1 hour when suspended (re-check after)
-
-    // Paths
-    stateFile: new URL('../data/state.json', import.meta.url).pathname,
-    auditLog: new URL('../data/audit.log', import.meta.url).pathname,
-    dailyCounterFile: new URL('../data/daily-counters.json', import.meta.url).pathname,
-
-    // Optional: Monad NFT Collection (read-only — agent never signs transactions)
-    monadRpcUrl: process.env.MONAD_RPC_URL ?? 'https://testnet-rpc.monad.xyz',
-    nftContractAddress: process.env.NFT_CONTRACT_ADDRESS ?? '',
+    // ... remaining config same
 } as const;
 
 export function validateConfig(): void {
     if (!config.moltbookApiKey) {
-        throw new Error('MOLTBOOK_API_KEY is required. Copy .env.example to .env and fill in your key.');
+        throw new Error('MOLTBOOK_API_KEY is required.');
     }
-    if (!config.anthropicApiKey) {
-        throw new Error('ANTHROPIC_API_KEY is required. Copy .env.example to .env and fill in your key.');
+    if (config.llmProvider === 'anthropic' && !config.anthropicApiKey) {
+        throw new Error('ANTHROPIC_API_KEY is required for Anthropic provider.');
     }
 }

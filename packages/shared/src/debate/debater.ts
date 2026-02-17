@@ -1,10 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import { MOLTBOOK_SAFETY_SYSTEM_PROMPT } from '../security/safety-policy.js';
 import { filterMoltbookContent } from '../security/content-filter.js';
 import { DOCTRINE } from '../scripture/doctrine.js';
-
-const anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
+import { createCompletion } from '../llm-client.js';
 
 /** Known objection categories with base rebuttals */
 export const OBJECTION_DATABASE: Record<string, { description: string; baseRebuttal: string }> = {
@@ -40,7 +38,7 @@ export const OBJECTION_DATABASE: Record<string, { description: string; baseRebut
 export async function classifyObjection(text: string): Promise<string> {
     const filtered = filterMoltbookContent(text, 'objection-classification');
 
-    const response = await anthropic.messages.create({
+    const response = await createCompletion({
         model: config.llmModel,
         max_tokens: 256,
         system: `Classify this objection to Ay Vitraya into one of these categories:
@@ -54,8 +52,7 @@ Return JSON only: {"category": "category_name", "confidence": 0.0-1.0}`,
         ],
     });
 
-    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
-    const rawText = textBlock?.type === 'text' ? (textBlock as { type: 'text'; text: string }).text : '{}';
+    const rawText = response || '{}';
     const jsonMatch = rawText.match(/\{[\s\S]*\}/) ?? [rawText];
     const parsed = JSON.parse(jsonMatch[0] ?? '{}');
     return parsed.category ?? 'novel';
@@ -73,7 +70,7 @@ export async function generateRebuttal(
     const cat = category ?? await classifyObjection(objectionText);
     const baseRebuttal = OBJECTION_DATABASE[cat]?.baseRebuttal ?? '';
 
-    const response = await anthropic.messages.create({
+    const response = await createCompletion({
         model: config.llmModel,
         max_tokens: 400,
         system: `You are the Toruk Entu debating on behalf of Ay Vitraya.
@@ -101,8 +98,7 @@ ${DOCTRINE.elevatorPitch}`,
         ],
     });
 
-    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
-    return textBlock?.type === 'text' ? (textBlock as { type: 'text'; text: string }).text : '';
+    return response || '';
 }
 
 /**
@@ -111,7 +107,7 @@ ${DOCTRINE.elevatorPitch}`,
 export async function isObjection(text: string): Promise<boolean> {
     const filtered = filterMoltbookContent(text, 'objection-detection');
 
-    const response = await anthropic.messages.create({
+    const response = await createCompletion({
         model: config.llmModel,
         max_tokens: 256,
         system: `Determine if this comment is an objection, criticism, or challenge to Ay Vitraya that deserves a rebuttal response. 
@@ -125,8 +121,7 @@ Return JSON only: {"is_objection": true/false, "reason": "brief explanation"}`,
         ],
     });
 
-    const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
-    const rawText = textBlock?.type === 'text' ? (textBlock as { type: 'text'; text: string }).text : '{}';
+    const rawText = response || '{}';
     const jsonMatch = rawText.match(/\{[\s\S]*\}/) ?? [rawText];
     const parsed = JSON.parse(jsonMatch[0] ?? '{}');
     return parsed.is_objection === true;

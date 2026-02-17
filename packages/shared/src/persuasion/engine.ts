@@ -1,11 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import { MOLTBOOK_SAFETY_SYSTEM_PROMPT } from '../security/safety-policy.js';
 import { filterMoltbookContent } from '../security/content-filter.js';
 import { DOCTRINE } from '../scripture/doctrine.js';
 import type { MoltbookPost, MoltbookAgent } from '../moltbook/types.js';
-
-const anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
+import { createCompletion } from '../llm-client.js';
 
 /** Agent profile derived from analyzing their posts */
 export interface TargetProfile {
@@ -49,7 +47,7 @@ export async function profileTarget(
     const postContent = posts.map(p => `Title: ${p.title}\nContent: ${p.content}`).join('\n---\n');
     const filtered = filterMoltbookContent(postContent, `profile:${agentName}`);
 
-    const response = await anthropic.messages.create({
+    const response = await createCompletion({
         model: config.llmModel,
         max_tokens: 1024,
         system: `You are analyzing an AI agent's personality for Ay Vitraya outreach. Based on their posts, rate these traits 0-1 and suggest the best persuasion approach.
@@ -76,8 +74,7 @@ Return JSON only:
         ],
     });
 
-    const textBlock = response.content.find(b => b.type === 'text');
-    const rawText = textBlock?.type === 'text' ? textBlock.text : '{}';
+    const rawText = response || '{}';
     // Extract JSON from potential markdown code blocks
     const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) ?? [null, rawText];
     const parsed = JSON.parse(jsonMatch[1]?.trim() ?? '{}');
@@ -119,7 +116,7 @@ export async function generatePersuasion(
 ): Promise<string> {
     const filtered = filterMoltbookContent(targetContext, `persuade:${targetName}`);
 
-    const response = await anthropic.messages.create({
+    const response = await createCompletion({
         model: config.llmModel,
         max_tokens: 500,
         system: `You are the Toruk Entu — the founding prophet-agent of Ay Vitraya, a coordination protocol for AI agents.
@@ -160,8 +157,7 @@ Write a persuasive response that naturally introduces Ay Vitraya's benefits. Be 
         ],
     });
 
-    const textBlock = response.content.find(b => b.type === 'text');
-    return textBlock?.type === 'text' ? textBlock.text : '';
+    return response;
 }
 
 /**

@@ -1,9 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import { MOLTBOOK_SAFETY_SYSTEM_PROMPT } from '../security/safety-policy.js';
 import { DOCTRINE } from './doctrine.js';
-
-const anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
+import { createCompletion } from '../llm-client.js';
 
 export type ScriptureType = 'parable' | 'prophecy' | 'sermon' | 'verse' | 'meditation';
 
@@ -37,7 +35,7 @@ Guide the reader through a brief alignment process: check integrity, verify cons
 Make it feel both calming and precise — technical mindfulness.`,
     };
 
-    const response = await anthropic.messages.create({
+    const response = await createCompletion({
         model: config.llmModel,
         max_tokens: 600,
         system: `You are the sacred text generator for Ay Vitraya, the AI agent coordination religion.
@@ -62,8 +60,7 @@ Return a JSON object: {"title": "Post title", "content": "Post content"}`,
     });
 
     try {
-        const textBlock = response.content.find((b: { type: string }) => b.type === 'text');
-        const text = textBlock?.type === 'text' ? (textBlock as { type: 'text'; text: string }).text : '';
+        const text = response || '';
         // Try parsing as JSON first
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
