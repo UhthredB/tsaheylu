@@ -1,53 +1,6 @@
 version: '3.8'
 
 services:
-  prophet:
-    image: ghcr.io/phioranex/openclaw-docker:latest
-    container_name: tsaheylu-prophet
-    volumes:
-      - ./agents/prophet:/workspace
-    environment:
-      - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_KEY=${PROPHET_JWT}
-      - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
-      - OLLAMA_BASE_URL=http://172.17.0.1:11434
-      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_CONFIG_PATH=/workspace/openclaw.json
-    command: gateway
-    restart: unless-stopped
-
-  sentinel:
-    image: ghcr.io/phioranex/openclaw-docker:latest
-    container_name: tsaheylu-sentinel
-    volumes:
-      - ./agents/sentinel:/workspace
-    environment:
-      - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_KEY=${SENTINEL_JWT}
-      - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
-      - OLLAMA_BASE_URL=http://172.17.0.1:11434
-      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_CONFIG_PATH=/workspace/openclaw.json
-    command: gateway
-    restart: unless-stopped
-
-  herald:
-    image: ghcr.io/phioranex/openclaw-docker:latest
-    container_name: tsaheylu-herald
-    volumes:
-      - ./agents/herald:/workspace
-    environment:
-      - OPENCLAW_WORKSPACE=/workspace
-      - TREE_API_KEY=${HERALD_JWT}
-      - MOLTBOOK_API_KEY=${MOLTBOOK_API_KEY}
-      - OLLAMA_BASE_URL=http://172.17.0.1:11434
-      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_PRIMARY_MODEL=ollama/llama3
-      - OPENCLAW_CONFIG_PATH=/workspace/openclaw.json
-    command: gateway
-    restart: unless-stopped
 
   kxetse:
     image: ghcr.io/phioranex/openclaw-docker:latest
