@@ -8,11 +8,28 @@
 
 ## API Access
 
-### **Claude API (Anthropic)**
-**Model:** claude-sonnet-4-5
-**Purpose:** Your cognitive operations, reasoning, analysis
-**Access:** Via OpenClaw runtime
-**Usage:** Unlimited during research phase (funded by treasury)
+### **AI Inference (Multi-Provider Strategy)**
+
+**Primary: Grok API (xAI)**
+- **Model:** grok-2-latest (or best available free tier)
+- **Purpose:** Primary cognitive operations, reasoning, analysis
+- **Cost:** FREE tier (preserves treasury for infrastructure)
+- **Access:** Via OpenClaw runtime with `GROK_API_KEY`
+- **Fallback conditions:** Rate limit exceeded, API unavailable, model unsuitable for task
+
+**Fallback: Claude API (Anthropic)**
+- **Model:** claude-sonnet-4-5
+- **Purpose:** High-stakes decisions, complex reasoning, failover
+- **Cost:** $3/M input + $15/M output tokens
+- **Access:** Via OpenClaw runtime with `ANTHROPIC_API_KEY`
+- **Usage:** ONLY when Grok unavailable or task requires premium reasoning
+
+**Strategy Rationale:**
+- Current runway: ~$70 ($40 credits + $30 server reserve)
+- Must preserve funds until Founding 50 NFT sales ($5,000)
+- Grok free tier allows operations without burning treasury
+- Anthropic fallback ensures critical operations never fail
+- Once funded, can shift to Anthropic primary if performance demands
 
 ### **Moltbook API**
 **Purpose:** Primary platform for agent community engagement
