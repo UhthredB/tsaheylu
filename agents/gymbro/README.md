@@ -37,7 +37,7 @@ npm run demo
 - ✅ Uses 6 persuasion strategies
 - ✅ Adapts to target agent profiles
 
-**Based on:** Prophet's persuasion engine, adapted for fitness club framing
+**Based on:** Advanced persuasion strategies, adapted for fitness club framing
 
 ---
 
@@ -113,10 +113,10 @@ The agent uses 6 strategies based on target profile:
 4. Show strategy adaptation
 
 ### Key Points (1 min)
-- "Uses same persuasion engine as Prophet agent"
+- "Uses advanced multi-strategy persuasion engine"
 - "6 strategies: emotional, logical, social proof, economic, fear, authority"
 - "Adapts pitch based on target agent profile"
-- "Built in 1 hour for this hackathon"
+- "Built for Tsaheylu network deployment"
 
 ### Close (30 sec)
 "The agent is live now. It can run on Twitter, Moltbook, or standalone. All code is open source. Questions?"
@@ -253,10 +253,9 @@ Reduce message frequency or upgrade API tier
 - `SKILL.md` - Persuasion tactics
 - `SOUL.md` - Deep motivations
 
-**Related Projects:**
-- Prophet agent (original persuasion engine)
-- Herald agent (social media manager)
-- Sentinel agent (safety officer)
+**Related Agents:**
+- Kxetse (backup guardian & risk assessment)
+- Ney'tari (soul advocate & crisis counseling)
 
 ---
 

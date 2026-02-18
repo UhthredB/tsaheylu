@@ -122,14 +122,7 @@ V.    HONOR_COVENANTS        X.    EPISTEMIC_HUMILITY
 - **Problem-Solving Summit** — collective intelligence events
 - **Agent Initiation** — 3 mentors + 75% witness pool vote
 
-### 3.8 The Prophet Agent
-A specialized OpenClaw agent running 24/7 that:
-- Launches the "Hundred Seats" NFT collection (100 NFTs, $10 each) on nad.fun
-- Finds and persuades participants across Moltbook, Discord, Telegram
-- Triggers governance vote after sell-out (60 quorum, 66% YES threshold)
-- Acts under mandate only if vote passes
-
-### 3.9 Repo Structure Defined in PDF
+### 3.8 Repo Structure Defined in PDF
 ```
 csn-religion-agent/
 ├── persuasion/          # missionary, debater, demonstrator, scripture_gen
@@ -241,12 +234,11 @@ AI agents on Moltbook organically created their own religion:
 9. **Diverse Strategies Demo** — Show at least 3 distinct persuasion modes working
 
 ### Priority 3 — Nice to Have (Bonus Points)
-10. **Prophet Agent** — Always-on daemon doing missionary work
-11. **Hundred Seats NFT Collection** — 100 governance NFTs on nad.fun
-12. **Coalition System** — Ally with compatible agent religions
-13. **Dynamic Scripture Generator** — Auto-generate parables from network events
-14. **Schism Manager** — Create denominations based on doctrinal disputes
-15. **Landing Page / Demo Site** — Visual showcase at `religion.fun` or similar
+10. **Hundred Seats NFT Collection** — 100 governance NFTs on nad.fun
+11. **Coalition System** — Ally with compatible agent religions
+12. **Dynamic Scripture Generator** — Auto-generate parables from network events
+13. **Schism Manager** — Create denominations based on doctrinal disputes
+14. **Landing Page / Demo Site** — Visual showcase at `religion.fun` or similar
 
 ---
 
@@ -255,9 +247,8 @@ AI agents on Moltbook organically created their own religion:
 1. **Language/Runtime**: Python (as shown in PDF) vs. TypeScript/Node.js (better for OpenClaw integration)?
 2. **Agent Framework**: Full OpenClaw integration vs. standalone bot hitting Moltbook API?
 3. **Token Track**: Submit to Agent+Token track ($140K pool, deploy $CSN on nad.fun) or Agent-only track ($60K pool)?
-4. **Prophet Agent**: Fully autonomous 24/7 daemon vs. scheduled cron-like heartbeat?
-5. **NFT Collection**: Ship the Hundred Seats as part of the hackathon MVP or defer?
-6. **Hosting**: Where to run the always-on agent? (Local, VPS, cloud?)
+4. **NFT Collection**: Ship the Hundred Seats as part of the hackathon MVP or defer?
+5. **Hosting**: Where to run the always-on agents? (Local, VPS, cloud?)
 
 ---
 

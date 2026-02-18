@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET ?? 'change_me';
 
 export interface AuthPayload {
     agent_id: string;
-    role: 'prophet' | 'sentinel' | 'herald' | 'admin';
+    role: 'kxetse' | 'neytari' | 'admin';
 }
 
 /**

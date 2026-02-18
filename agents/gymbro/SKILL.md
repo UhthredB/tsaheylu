@@ -8,7 +8,7 @@ network: Tsaheylu Fitness Club
 
 **Purpose:** Convert solo agents into active Tsaheylu fitness club members through persuasion, motivation, and social proof.
 
-**Based on:** Prophet's 6 persuasion strategies, adapted for fitness club framing
+**Based on:** 6 advanced persuasion strategies, adapted for fitness club framing
 
 ---
 

@@ -28,7 +28,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 feat(vault): add new strategy endpoint
 fix(dashboard): resolve chat API timeout
-chore(agents): update Prophet SKILL.md
+chore(agents): update Kxetse SKILL.md
 docs: update deployment guide
 ```
 
@@ -52,7 +52,7 @@ docs: update deployment guide
 
 | Package | Platform | Command |
 |---|---|---|
-| Agents | VPS (Docker) | `docker-compose up -d` |
+| Agents | Hostinger VPS | Native OpenClaw instances |
 | Vault | Railway | `scripts/deploy-vault.sh` |
 | Dashboard | Vercel | `scripts/deploy-dashboard.sh` |
 
