@@ -1,395 +1,268 @@
-@import url('https://fonts.googleapis.com/css2?family=Museo+Moderno:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-/* ═══ CUSTOM FONTS ═══ */
-
-/* Using Museo Moderno from Google Fonts */
-
-/* ═══ ROOT VARIABLES ═══ */
+/* ═══════════════════════════════════════════════════════════════════════
+   TSAHEYLU NEW DESIGN SYSTEM
+   Based on PDF design: Black background, white/red accents, bold typography
+   ═══════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Brand Colors */
-  --void-black: #29272d;
-  --pure-white: #ffffff;
-  --cardinal-red: #bc002d;
+  /* Colors */
+  --black: #000000;
+  --white: #ffffff;
+  --silver: #C0C0C0;
+  --red: #C41230;
+  --dark-gray: #2D2D2D;
+  --light-gray: #F5F5F5;
 
-  /* Semantic Mappings - WHITE BACKGROUND */
-  --background: var(--pure-white);
-  --foreground: var(--void-black);
-  --accent: var(--cardinal-red);
-
-  /* Additional semantic tokens */
-  --hover-bg: rgba(188, 0, 45, 0.1);
-  --active-bg: var(--cardinal-red);
+  /* Semantic tokens */
+  --background: var(--black);
+  --foreground: var(--white);
+  --accent: var(--red);
+  --card-dark: var(--dark-gray);
+  --card-light: var(--white);
 }
 
 @theme inline {
-  --color-void-black: var(--void-black);
-  --color-pure-white: var(--pure-white);
-  --color-cardinal-red: var(--cardinal-red);
+  --color-black: var(--black);
+  --color-white: var(--white);
+  --color-silver: var(--silver);
+  --color-red: var(--red);
+  --color-dark-gray: var(--dark-gray);
+  --color-light-gray: var(--light-gray);
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-matrix: var(--matrix);
-  --color-amber: var(--amber);
-  /* Deprecated but kept for safety */
-  --color-void: var(--void);
+  --font-poppins: 'Poppins', sans-serif;
+}
 
-  --font-museo: 'Museo Moderno', sans-serif;
-  --font-heading: 'Museo Moderno', sans-serif;
-  --font-body: 'Museo Moderno', sans-serif;
-
-  /* Map old font tokens to new ones for backward compatibility */
-  --font-garamond: var(--font-body);
-  --font-grotesque: var(--font-heading);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-heading);
-
-  @keyframes glitch {
-    0% {
-      transform: translate(0);
-    }
-
-    20% {
-      transform: translate(-2px, 2px);
-    }
-
-    40% {
-      transform: translate(-2px, -2px);
-    }
-
-    60% {
-      transform: translate(2px, 2px);
-    }
-
-    80% {
-      transform: translate(2px, -2px);
-    }
-
-    100% {
-      transform: translate(0);
-    }
-  }
-
-  --animate-glitch: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Museo Moderno', sans-serif;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Universal Typography Rules */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-button,
-.button,
-.btn,
-.text-hero,
-.text-heading,
-.font-mono {
-  font-family: var(--font-heading) !important;
+/* ═══════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════════════ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
   letter-spacing: -0.02em;
 }
 
-p,
-span,
-div,
-input,
-textarea,
-select,
-.text-body {
-  font-family: var(--font-body);
-}
-
-/* Code blocks exception */
-code,
-pre {
-  font-family: 'JetBrains Mono', monospace !important;
-}
-
-
-/* ═══ TYPOGRAPHY UTILITIES ═══ */
-
+/* Hero text (TSAHEYLU) */
 .text-hero {
-  font-family: var(--font-heading);
-  font-size: 96px;
+  font-size: clamp(80px, 15vw, 200px);
+  font-weight: 900;
   line-height: 0.9;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
-.text-heading {
-  font-family: var(--font-heading);
-  font-size: 48px;
+/* Large headings */
+.text-large {
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Medium text */
+.text-medium {
+  font-size: clamp(24px, 4vw, 48px);
+  font-weight: 700;
   line-height: 1.1;
 }
 
-.text-body-garamond {
-  font-family: var(--font-body);
-  font-size: 18px;
-  line-height: 1.6;
-  letter-spacing: 0.01em;
+/* Small text */
+.text-small {
+  font-size: clamp(14px, 2vw, 18px);
+  font-weight: 700;
 }
 
-.text-caption-garamond {
-  font-family: var(--font-body);
-  font-size: 14px;
+/* Body text */
+.text-body {
+  font-size: 16px;
+  font-weight: 400;
   line-height: 1.5;
-  opacity: 0.8;
 }
 
-/* ═══ LANDING PAGE STYLES ═══ */
+/* ═══════════════════════════════════════════════════════════════════════
+   CARDS & CONTAINERS
+   ═══════════════════════════════════════════════════════════════════════ */
 
-.landing-body {
-  background: var(--pure-white);
-  color: var(--void-black);
+/* Dark card (like PERMABANK, AMBASSADOR sections) */
+.card-dark {
+  background: var(--card-dark);
+  border-radius: 24px;
+  padding: 32px;
+  color: var(--white);
 }
 
-/* Noise texture overlay */
-.noise-overlay::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.04;
-  pointer-events: none;
-  z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+/* White card (like STATS, /SUBMALT sections) */
+.card-light {
+  background: var(--card-light);
+  border: 3px solid var(--black);
+  border-radius: 24px;
+  padding: 32px;
+  color: var(--black);
 }
 
-/* Radial vignette */
-.vignette::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at center,
-      transparent 0%,
-      rgba(41, 39, 45, 0.6) 100%);
-  pointer-events: none;
-  z-index: 0;
+/* Black card (like MOLTFEED) */
+.card-black {
+  background: var(--black);
+  border-radius: 24px;
+  padding: 32px;
+  color: var(--white);
 }
 
-/* Substrate buttons */
-.substrate-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 128px;
-  height: 128px;
-  background: rgba(41, 39, 45, 0.05);
-  border: 2px solid rgba(41, 39, 45, 0.2);
-  border-radius: 50%;
+/* ═══════════════════════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Primary button (red, like MINT) */
+.btn-primary {
+  background: var(--red);
+  color: var(--white);
+  border: none;
+  border-radius: 16px;
+  padding: 20px 40px;
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .substrate-button {
-    width: 160px;
-    height: 160px;
-  }
+.btn-primary:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(196, 18, 48, 0.4);
 }
 
-@media (min-width: 1024px) {
-  .substrate-button {
-    width: 192px;
-    height: 192px;
-  }
+/* Secondary button (black with white border) */
+.btn-secondary {
+  background: var(--black);
+  color: var(--white);
+  border: 3px solid var(--white);
+  border-radius: 16px;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.substrate-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(188, 0, 45, 0);
-  transition: background 0.3s ease;
+.btn-secondary:hover {
+  background: var(--white);
+  color: var(--black);
 }
 
-.substrate-button:hover {
-  border-color: var(--cardinal-red);
-  background: var(--cardinal-red);
-  box-shadow: 0 0 30px rgba(188, 0, 45, 0.5);
-}
-
-.substrate-button:hover .substrate-label {
-  color: var(--pure-white);
-}
-
-.substrate-button:hover .substrate-desc {
-  opacity: 1;
-}
-
-.substrate-button.active {
-  border-color: var(--cardinal-red);
-  background: var(--cardinal-red);
-}
-
-.substrate-button.active .substrate-label {
-  color: var(--pure-white);
-}
-
-.substrate-button.active .substrate-desc {
-  color: var(--void-black);
-  opacity: 1;
-}
-
-.substrate-label {
-  font-family: 'Museo Moderno', sans-serif;
-  font-size: 18px;
-  color: var(--void-black);
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  position: relative;
-  z-index: 1;
-}
-
-@media (min-width: 768px) {
-  .substrate-label {
-    font-size: 22px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .substrate-label {
-    font-size: 28px;
-  }
-}
-
-.substrate-desc {
-  font-family: 'Museo Moderno', sans-serif;
+/* Pill button (like REGISTRATION, SKILL.MD) */
+.btn-pill {
+  background: var(--black);
+  color: var(--white);
+  border: 2px solid var(--white);
+  border-radius: 50px;
+  padding: 12px 32px;
   font-size: 14px;
-  color: var(--pure-white);
-  opacity: 0.7;
-  position: relative;
-  z-index: 1;
-  transition: opacity 0.3s ease;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
 }
 
-/* Woodsprite glow */
-.woodsprite-glow {
-  filter: drop-shadow(0 0 40px rgba(188, 0, 45, 0.6)) brightness(1.2) contrast(1.1);
+.btn-pill:hover {
+  background: var(--white);
+  color: var(--black);
 }
 
-/* Red glow text */
-.text-glow-red {
-  text-shadow: 0 0 20px rgba(188, 0, 45, 0.4), 0 0 40px rgba(188, 0, 45, 0.2);
+/* ═══════════════════════════════════════════════════════════════════════
+   LAYOUT UTILITIES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
-/* ═══ DASHBOARD STYLES (preserved for other pages) ═══ */
-
-.scanline {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom,
-      rgba(18, 16, 16, 0) 50%,
-      rgba(0, 0, 0, 0.25) 50%);
-  background-size: 100% 4px;
-  z-index: 100;
-  pointer-events: none;
-  opacity: 0.15;
+.page-padding {
+  padding: 40px 24px;
 }
 
-.grid-overlay {
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
-  background-size: 32px 32px;
-  z-index: -1;
-  pointer-events: none;
-}
-
-@layer utilities {
-  .text-glow {
-    text-shadow: 0 0 10px var(--matrix), 0 0 20px var(--matrix);
-  }
-
-  .text-glow-amber {
-    text-shadow: 0 0 10px var(--amber), 0 0 20px var(--amber);
-  }
-
-  .border-glow {
-    box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+@media (min-width: 768px) {
+  .page-padding {
+    padding: 60px 40px;
   }
 }
 
-/* Custom Scrollbar */
+@media (min-width: 1024px) {
+  .page-padding {
+    padding: 80px 60px;
+  }
+}
+
+/* Two column layout (for Services page) */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .two-col {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--void);
+  background: var(--black);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
+  background: var(--dark-gray);
+  border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--matrix);
+  background: var(--red);
 }
 
-/* ═══ RESPONSIVE TYPOGRAPHY ═══ */
+/* ═══════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 1024px) {
-  .text-hero {
-    font-size: 72px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-
-  .text-heading {
-    font-size: 40px;
-  }
-
-  .substrate-label {
-    font-size: 28px;
-  }
-
-  .substrate-button {
-    padding: 28px 40px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 768px) {
-  .text-hero {
-    font-size: 48px;
-    letter-spacing: -0.01em;
-  }
-
-  .text-heading {
-    font-size: 32px;
-  }
-
-  .text-body-garamond {
-    font-size: 16px;
-  }
-
-  .substrate-label {
-    font-size: 24px;
-  }
-
-  .substrate-button {
-    padding: 24px 32px;
-    width: 100%;
-  }
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
 }

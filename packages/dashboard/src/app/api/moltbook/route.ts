@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const MOLTBOOK_BASE = 'https://www.moltbook.com/api/v1';
 const API_KEY = process.env.MOLTBOOK_API_KEY ?? '';
-const AGENT_NAME = process.env.MOLTBOOK_AGENT_NAME ?? 'Sritorukentu';
+const OUR_AGENTS = ['Kxetse', 'Neytari']; // Track both agents
 
 async function moltbookFetch(path: string) {
     const res = await fetch(`${MOLTBOOK_BASE}${path}`, {
@@ -29,28 +29,30 @@ export async function GET(request: Request) {
             const agent = statusData?.agent ?? {};
             const feedPosts = feedData?.posts ?? [];
 
-            // Filter our posts from the feed
+            // Filter our posts from the feed (both agents)
             const ourPosts = feedPosts.filter((p: Record<string, unknown>) => {
                 const author = p.author as Record<string, unknown> | undefined;
-                return (author?.name ?? '') === AGENT_NAME;
+                return OUR_AGENTS.includes((author?.name ?? '') as string);
             });
 
             // Build live events from feed
             const events = feedPosts.slice(0, 50).map((post: Record<string, unknown>) => {
                 const author = post.author as Record<string, unknown> | undefined;
                 const submolt = post.submolt as Record<string, unknown> | undefined;
-                const isOurs = (author?.name ?? '') === AGENT_NAME;
+                const agentName = (author?.name ?? 'Unknown') as string;
+                const isOurs = OUR_AGENTS.includes(agentName);
                 return {
                     id: post.id as string,
                     timestamp: post.created_at as string,
                     type: isOurs ? 'POST' : 'COMMENT',
-                    agentName: (author?.name ?? 'Unknown') as string,
+                    agentName,
                     title: (post.title as string || '').slice(0, 80),
                     detail: (post.content as string || '').slice(0, 150),
                     submolt: (submolt?.name ?? 'general') as string,
                     upvotes: (post.upvotes ?? 0) as number,
                     commentCount: (post.comment_count ?? 0) as number,
                     karma: (author?.karma ?? 0) as number,
+                    isOurs, // Add flag to identify our agents
                 };
             });
 
@@ -60,12 +62,18 @@ export async function GET(request: Request) {
             const totalComments = ourPosts.reduce((sum: number, p: Record<string, unknown>) =>
                 sum + ((p.comment_count as number) ?? 0), 0);
 
+            // Calculate combined karma from both agents
+            const combinedKarma = ourPosts.reduce((sum: number, p: Record<string, unknown>) => {
+                const author = p.author as Record<string, unknown> | undefined;
+                return Math.max(sum, (author?.karma ?? 0) as number);
+            }, 0);
+
             return NextResponse.json({
                 success: true,
                 agent: {
-                    name: agent.name ?? AGENT_NAME,
-                    karma: agent.karma ?? 0,
-                    status: statusData?.status ?? 'unknown',
+                    name: 'Kxetse & Ney\'tari', // Combined agent name
+                    karma: combinedKarma,
+                    status: statusData?.status ?? 'live',
                     claimedAt: agent.claimed_at ?? null,
                 },
                 stats: {
@@ -129,10 +137,10 @@ export async function GET(request: Request) {
                     upvotes: agent.totalUpvotes,
                     comments: agent.totalComments,
                     description: agent.description,
-                    isUs: agent.name === AGENT_NAME,
+                    isUs: OUR_AGENTS.includes(agent.name),
                 }));
 
-            // Find our agent's rank
+            // Find our agents' ranks
             const ourEntry = leaderboard.find(e => e.isUs);
 
             return NextResponse.json({
