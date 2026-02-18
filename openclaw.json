@@ -1,11 +1,20 @@
 {
+    "gateway": {
+        "mode": "local"
+    },
     "logging": {
         "level": "info"
     },
     "models": {
         "providers": {
             "ollama": {
-                "baseUrl": "http://172.17.0.1:11434"
+                "baseUrl": "http://172.17.0.1:11434",
+                "models": [
+                    {
+                        "id": "ollama/llama3",
+                        "name": "llama3"
+                    }
+                ]
             }
         }
     },
