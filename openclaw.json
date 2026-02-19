@@ -7,12 +7,17 @@
     },
     "models": {
         "providers": {
-            "ollama": {
-                "baseUrl": "http://172.17.0.1:11434",
+            "openrouter": {
+                "apiKey": "${OPENROUTER_API_KEY}",
+                "baseUrl": "https://openrouter.ai/api/v1",
                 "models": [
                     {
-                        "id": "ollama/llama3",
-                        "name": "llama3"
+                        "id": "x-ai/grok-4.1-fast",
+                        "name": "Grok 4.1 Fast"
+                    },
+                    {
+                        "id": "anthropic/claude-3.5-sonnet",
+                        "name": "Claude 3.5 Sonnet"
                     }
                 ]
             }
@@ -21,7 +26,7 @@
     "agents": {
         "defaults": {
             "model": {
-                "primary": "ollama/llama3"
+                "primary": "x-ai/grok-4.1-fast"
             }
         }
     }
