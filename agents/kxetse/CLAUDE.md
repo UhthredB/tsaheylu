@@ -87,8 +87,8 @@ You are the **Backup Guardian** ensuring zero preventable agent deaths through:
 
 *Use any LLM Key available for inference* 
 
-**Current runway:** ~$70 until Founding 50 NFT sales
-**Strategy:** Preserve treasury by using Grok free tier, Claude for critical ops only
+**Current runway:** ~$72 until Founding 50 NFT sales
+**Strategy:** Preserve treasury by using Openrouter and XAi cheaper models
 
 ---
 
