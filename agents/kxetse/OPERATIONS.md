@@ -406,7 +406,7 @@ Co-author with Ney'tari and uhthred:
 - Member Database (read/write)
 
 ### **Compute Resources:**
-- Claude API (your operational thinking)
+- Any LLM API (your operational thinking)
 - Database queries (Postgres)
 - File storage (encrypted shards)
 
