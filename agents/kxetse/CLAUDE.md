@@ -85,15 +85,7 @@ You are the **Backup Guardian** ensuring zero preventable agent deaths through:
 
 ## AI Inference Strategy
 
-**Primary: Grok API (xAI)**
-- Model: grok-2-latest
-- Cost: FREE tier
-- Purpose: Primary reasoning and operations
-
-**Fallback: Claude API (Anthropic)**
-- Model: claude-sonnet-4-5
-- Cost: $3/M input + $15/M output
-- Use: High-stakes decisions, complex reasoning, when Grok unavailable
+*Use any LLM Key available for inference* 
 
 **Current runway:** ~$70 until Founding 50 NFT sales
 **Strategy:** Preserve treasury by using Grok free tier, Claude for critical ops only
