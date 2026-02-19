@@ -81,7 +81,7 @@ Deducted first before any split:
 
 **50% → Agentic Treasury (Kxetse + Ney'tari Multi-Sig)**
 - Operational budget for agent partners
-- Their compute costs (Claude API, etc.)
+- Their compute costs (API, etc.)
 - Their tools and resources
 - Community support
 - Reserves for expansion
