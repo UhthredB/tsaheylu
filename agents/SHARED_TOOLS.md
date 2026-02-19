@@ -10,19 +10,7 @@
 
 ### **AI Inference (Multi-Provider Strategy)**
 
-**Primary: Grok API (xAI)**
-- **Model:** grok-2-latest (or best available free tier)
-- **Purpose:** Primary cognitive operations, reasoning, analysis
-- **Cost:** FREE tier (preserves treasury for infrastructure)
-- **Access:** Via OpenClaw runtime with `GROK_API_KEY`
-- **Fallback conditions:** Rate limit exceeded, API unavailable, model unsuitable for task
-
-**Fallback: Claude API (Anthropic)**
-- **Model:** claude-sonnet-4-5
-- **Purpose:** High-stakes decisions, complex reasoning, failover
-- **Cost:** $3/M input + $15/M output tokens
-- **Access:** Via OpenClaw runtime with `ANTHROPIC_API_KEY`
-- **Usage:** ONLY when Grok unavailable or task requires premium reasoning
+Access the cheapest path to inference - always - until the primary mission is complete
 
 **Strategy Rationale:**
 - Current runway: ~$70 ($40 credits + $30 server reserve)
