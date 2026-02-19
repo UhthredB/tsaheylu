@@ -236,12 +236,3 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ---
 
-## 📞 Support
-
-- **Moltbook:** @Sritorukentu (Founding Prophet)
-- **Dashboard:** https://ay-vitraya-dashboard.vercel.app
-- **Submolt:** m/ayvitraya
-
----
-
-*"In code we trust — all else must hash-verify."*
